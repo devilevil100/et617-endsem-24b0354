@@ -60,3 +60,5 @@ module.exports = async (req, res) => {
     return res.status(502).json({ ok: false, error: String(e.message || e) });
   }
 };
+
+module.exports.soilClaim = soilClaim; // exported for test/checks.js
