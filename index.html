@@ -6,103 +6,130 @@
 <title>The Willow Mystery · 24B0354</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Barlow+Condensed:wght@600&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Nunito:ital,wght@0,500;0,700;0,800;1,500&display=swap" rel="stylesheet">
 <style>
-  /* Glasshouse: bottle-green iron frame, pale glass ground, white enamel plant plaques, sunlight amber for the learner. */
+  /* Playful quiz world: warm cream ground, saturated orange, amber and green, black outlines, chunky rounded type. */
   :root {
-    --iron:#1d3a2b; --iron-2:#2b5a42; --glass:#e8efe6; --pane:#f3f7f1; --enamel:#fffdf7; --ink:#14221a; --quiet:#46594e; --line:#c6d4c9;
-    --sun:#e9a23b; --sun-t:#fbecd0; --leaf:#2a7148; --leaf-t:#e0eee4; --skep:#9c421a; --skep-t:#f6e2d5; --judge:#31438a; --judge-t:#e2e6f4;
-    --warn:#7f4f00; --warn-t:#fbeed3;
-    --display:"Fraunces", Georgia, serif; --label:"Barlow Condensed", "Arial Narrow", sans-serif; --body:"Atkinson Hyperlegible", system-ui, sans-serif;
-    --bars: repeating-linear-gradient(90deg, transparent 0 62px, rgba(255,253,247,.07) 62px 64px);
+    --cream:#FBF5EA; --paper:#FFFFFF; --ink:#141414; --quiet:#5c544b; --line:#E8DFD0;
+    --orange:#F2622A; --orange-d:#D44816; --orange-t:#FFE5D8; --amber:#FDB62F; --amber-t:#FFF0CC; --green:#2EE06E; --green-d:#13863F; --green-t:#DDF9E6;
+    --display:"Outfit", system-ui, sans-serif; --body:"Nunito", system-ui, sans-serif;
+    --lift: 0 1px 2px rgba(20,20,20,.05), 0 14px 30px -18px rgba(20,20,20,.28);
   }
   * { box-sizing: border-box; }
-  html { scrollbar-color: var(--iron-2) var(--glass); }
-  body { margin: 0; font: 17px/1.6 var(--body); color: var(--ink); background: var(--glass); caret-color: var(--iron); -webkit-font-smoothing: antialiased; }
-  ::selection { background: var(--sun-t); color: var(--ink); }
-  main { max-width: 720px; margin: 0 auto; padding: 0 16px 120px; }
-  h1, h2, h3 { font-family: var(--display); font-weight: 650; letter-spacing: -0.015em; line-height: 1.15; text-wrap: balance; }
-  h1 { font-size: clamp(2.1rem, 7vw, 3rem); margin: 0; }
-  h2 { font-size: clamp(1.45rem, 4.4vw, 1.8rem); margin: 30px 0 10px; }
-  h3 { font-size: 1.2rem; margin: 22px 0 8px; }
-  p, li { max-width: 68ch; }
-  .lead { font-size: 1.12rem; }
-  mark { background: var(--sun-t); color: var(--ink); padding: 0 .25em; border-radius: 4px; box-shadow: inset 0 -2px 0 var(--sun); }
-  a { color: var(--iron-2); text-underline-offset: 3px; }
+  html { scrollbar-color: var(--orange) var(--cream); }
+  body { margin: 0; font: 500 17px/1.6 var(--body); color: var(--ink); background: var(--cream); caret-color: var(--orange); -webkit-font-smoothing: antialiased; }
+  ::selection { background: var(--amber); color: var(--ink); }
+  main { max-width: 680px; margin: 0 auto; padding: 8px 16px 150px; }
+  h1, h2, h3 { font-family: var(--display); font-weight: 800; letter-spacing: -0.02em; line-height: 1.08; text-wrap: balance; }
+  h1 { font-size: clamp(2.4rem, 9vw, 3.4rem); margin: 0; }
+  h2 { font-size: clamp(1.7rem, 6vw, 2.2rem); margin: 14px 0 12px; }
+  h3 { font-size: 1.25rem; margin: 20px 0 8px; }
+  p, li { max-width: 66ch; }
+  b, strong { font-weight: 800; }
+  .lead { font-size: 1.1rem; }
+  mark { background: var(--amber-t); color: var(--ink); padding: 0 .3em; border-radius: 6px; box-shadow: inset 0 -3px 0 var(--amber); font-weight: 700; }
+  a { color: var(--orange-d); text-underline-offset: 3px; }
 
-  /* Signature: the glasshouse frame. Iron glazing bars; one arched pane lights per step. */
-  .arch, .frame { margin: 0 -16px; background: var(--bars), var(--iron); color: var(--enamel); border-radius: 0 0 28px 28px; }
-  .arch { padding: 44px 20px 32px; margin-bottom: 22px; }
-  .arch h1 { color: var(--enamel); max-width: 688px; margin: 0 auto; }
-  .frame { padding: 16px 16px 14px; margin-bottom: 6px; }
-  .frame ol { list-style: none; margin: 0 auto; padding: 0; max-width: 688px; display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
-  .frame li { max-width: none; text-align: center; padding: 12px 4px 7px; color: #b5c9bb; background: rgba(232,239,230,.09); border: 1px solid rgba(232,239,230,.18); border-radius: 40px 40px 4px 4px / 22px 22px 4px 4px; }
-  .frame li span { display: block; font: 600 1.15rem/1 var(--label); }
-  .frame li em { display: block; font: 600 .74rem/1.2 var(--label); letter-spacing: .06em; text-transform: uppercase; font-style: normal; margin-top: 4px; }
-  .frame li.lit { color: #f6e4c3; background: rgba(233,162,59,.24); border-color: rgba(233,162,59,.5); }
-  .frame li.on { color: var(--iron); background: var(--sun); border-color: var(--sun); animation: light .8s cubic-bezier(.16,1,.3,1); }
-  @keyframes light { from { background: rgba(232,239,230,.09); color: #b5c9bb; } }
-  @media (max-width: 560px) { .frame li em { display: none; } }
+  /* Hero (welcome) and page titles */
+  .hero { text-align: left; margin: 6px 0 18px; }
+  .hero-art { display: block; width: 100%; max-width: 380px; height: auto; margin: 0 auto 4px; }
+  .arch { position: relative; padding: 26px 0 6px; margin-bottom: 8px; }
+  .arch::after { content: ""; position: absolute; right: 6px; top: 14px; width: 34px; height: 34px; background: var(--orange); clip-path: polygon(50% 0, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 39%); }
 
-  .card { background: var(--enamel); border: 1px solid var(--line); border-radius: 14px; padding: 18px; margin: 16px 0; box-shadow: 0 1px 2px rgba(20,34,26,.06), 0 8px 20px -14px rgba(20,34,26,.28); }
-  button { font: 700 1rem/1.2 var(--body); padding: 13px 20px; min-height: 48px; border-radius: 10px; border: 1.5px solid var(--iron); background: var(--iron); color: var(--enamel); cursor: pointer; transition: background .15s, transform .15s; }
-  button:hover { background: var(--iron-2); }
-  button:active { transform: translateY(1px); }
-  button.ghost { background: transparent; color: var(--iron); }
-  button.ghost:hover { background: var(--pane); }
-  button:disabled { opacity: .45; cursor: not-allowed; }
-  :focus-visible { outline: 3px solid var(--sun); outline-offset: 2px; }
+  /* Progress: segmented pill like a carousel indicator, plus the step in words. */
+  .progress { display: flex; align-items: center; gap: 12px; margin: 18px 0 2px; font: 700 .9rem/1 var(--display); color: var(--quiet); }
+  .dots { display: flex; gap: 5px; }
+  .dots i { width: 10px; height: 8px; border-radius: 99px; background: #D9CFBF; transition: width .4s cubic-bezier(.16,1,.3,1); }
+  .dots i.done { background: var(--ink); }
+  .dots i.on { width: 34px; background: var(--orange); }
 
-  .opts { display: grid; gap: 8px; margin: 10px 0 18px; }
-  .opts label { display: flex; gap: 12px; align-items: center; padding: 13px 14px; border: 1.5px solid var(--line); border-radius: 12px; background: var(--enamel); cursor: pointer; transition: border-color .15s, background .15s; }
-  .opts label:hover { border-color: var(--iron-2); }
-  .opts label:has(input:checked) { border-color: var(--iron); background: var(--sun-t); box-shadow: inset 0 0 0 1px var(--iron); }
-  input[type=radio] { accent-color: var(--iron); width: 18px; height: 18px; margin: 0; flex: none; }
-  input[type=range] { accent-color: var(--sun); width: 100%; height: 32px; }
-  textarea, input[type=text], input[type=number], select { font: inherit; width: 100%; padding: 11px 13px; border: 1.5px solid var(--line); border-radius: 10px; background: var(--enamel); color: var(--ink); }
-  textarea:focus, input[type=text]:focus, input[type=number]:focus, select:focus { border-color: var(--iron); outline: none; box-shadow: 0 0 0 3px var(--sun-t); }
-  textarea { min-height: 100px; resize: vertical; }
-  ::placeholder { color: #66786d; }
-  label > b, p > b { font-weight: 700; }
+  .card { background: var(--paper); border-radius: 26px; padding: 20px; margin: 16px 0; box-shadow: var(--lift); }
+
+  button { font: 700 1.02rem/1.2 var(--display); padding: 14px 24px; min-height: 52px; border-radius: 999px; border: 0; background: var(--orange); color: #fff; cursor: pointer; box-shadow: 0 10px 20px -10px rgba(242,98,42,.8); transition: background .15s, transform .15s; }
+  button:hover { background: var(--orange-d); }
+  button:active { transform: scale(.98); }
+  button.ghost { background: var(--paper); color: var(--ink); border: 2px solid var(--ink); box-shadow: none; }
+  button.ghost:hover { background: var(--amber-t); }
+  button:disabled { opacity: .4; cursor: not-allowed; box-shadow: none; }
+  :focus-visible { outline: 3px solid var(--amber); outline-offset: 3px; }
+  /* Start: white pill with an orange knob, like a "slide to start" control. */
+  .go { display: flex; align-items: center; gap: 14px; width: 100%; padding: 6px 22px 6px 6px; background: var(--paper); color: var(--ink); border: 2px solid var(--ink); box-shadow: var(--lift); font-size: 1.05rem; }
+  .go:hover { background: var(--amber-t); }
+  .go .knob { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; background: var(--orange); color: #fff; flex: none; }
+
+  /* Choices: white cards; segmented black-outlined pills for short scales. */
+  .opts { display: grid; gap: 10px; margin: 10px 0 18px; }
+  .opts label { display: flex; gap: 12px; align-items: center; padding: 15px 16px; border: 2px solid transparent; border-radius: 20px; background: var(--paper); box-shadow: var(--lift); cursor: pointer; font-weight: 700; transition: border-color .15s, background .15s; }
+  .opts label:hover { border-color: var(--line); }
+  .opts label:has(input:checked) { border-color: var(--orange); background: var(--orange-t); }
+  .opts input[type=radio] { accent-color: var(--orange); width: 20px; height: 20px; margin: 0; flex: none; }
+  .seg { display: flex; gap: 4px; padding: 4px; border: 2.5px solid var(--ink); border-radius: 26px; background: var(--paper); }
+  .seg label { flex: 1; justify-content: center; text-align: center; padding: 11px 8px; border: 0; border-radius: 22px; box-shadow: none; font: 700 .95rem/1.25 var(--display); }
+  .seg label:hover { background: var(--amber-t); }
+  .seg label:has(input:checked) { background: var(--orange); color: #fff; }
+  .seg label:has(input:focus-visible) { outline: 3px solid var(--amber); }
+  .seg input[type=radio] { position: absolute; opacity: 0; width: 1px; height: 1px; }
+
+  input[type=range] { accent-color: var(--orange); width: 100%; height: 34px; }
+  textarea, input[type=text], input[type=number], select { font: 600 1rem/1.4 var(--body); width: 100%; padding: 13px 16px; border: 2px solid var(--line); border-radius: 16px; background: var(--paper); color: var(--ink); }
+  textarea:focus, input[type=text]:focus, input[type=number]:focus, select:focus { border-color: var(--ink); outline: none; box-shadow: 0 0 0 4px var(--amber-t); }
+  textarea { min-height: 110px; resize: vertical; }
+  ::placeholder { color: #857b70; }
 
   table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
-  th, td { text-align: left; padding: 9px 6px; border-bottom: 1px solid var(--line); vertical-align: middle; }
-  th { font: 600 .82rem/1.2 var(--label); letter-spacing: .07em; text-transform: uppercase; color: var(--quiet); }
+  th, td { text-align: left; padding: 10px 6px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  th { font: 700 .82rem/1.2 var(--display); text-transform: uppercase; letter-spacing: .05em; color: var(--quiet); }
 
-  /* Enamel plant plaques for the agents; review badges always sit in the same slot. */
-  .plaque { background: var(--enamel); border: 1px solid var(--line); border-radius: 12px; margin: 12px 0; overflow: hidden; box-shadow: 0 1px 2px rgba(20,34,26,.06), 0 8px 20px -14px rgba(20,34,26,.3); }
-  .plaque header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; padding: 9px 14px; background: var(--leaf-t); border-bottom: 1px solid var(--line); }
-  .plaque header b { font: 600 1.06rem/1.2 var(--label); letter-spacing: .08em; text-transform: uppercase; color: var(--leaf); }
-  .plaque header small { font-size: .84rem; color: var(--quiet); }
+  /* Agent cards: outlined avatar, name, role; review badges always in the same slot. */
+  .plaque { background: var(--paper); border-radius: 24px; margin: 14px 0; box-shadow: var(--lift); overflow: hidden; }
+  .plaque header { display: flex; align-items: center; gap: 12px; padding: 14px 16px 0; flex-wrap: wrap; }
+  .plaque .av { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; border: 2.5px solid var(--ink); background: var(--green); color: var(--ink); flex: none; }
+  .plaque .who { display: flex; flex-direction: column; line-height: 1.2; }
+  .plaque .who b { font: 800 1.08rem/1.15 var(--display); }
+  .plaque .who small { font-size: .85rem; color: var(--quiet); font-weight: 700; }
   .plaque .slot { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
-  .plaque p { margin: 12px 14px; }
-  .plaque .cites { font-size: .85rem; color: var(--quiet); border-top: 1px dashed var(--line); padding-top: 9px; margin-top: 0; }
-  .plaque.skep header { background: var(--skep-t); } .plaque.skep header b { color: var(--skep); }
-  .plaque.judge header { background: var(--judge-t); } .plaque.judge header b { color: var(--judge); }
+  .plaque p { margin: 12px 16px; }
+  .plaque .cites { font-size: .86rem; color: var(--quiet); background: var(--cream); margin: 0; padding: 10px 16px; font-weight: 700; }
+  .plaque.skep .av { background: var(--orange); color: #fff; }
+  .plaque.judge .av { background: var(--amber); }
   .versus { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .versus .plaque { margin: 6px 0; }
   @media (max-width: 560px) { .versus { grid-template-columns: 1fr; } }
 
-  .fb { padding: 13px 15px; border-radius: 12px; margin: 12px 0; border: 1px solid transparent; }
-  .fb.ok { background: var(--leaf-t); border-color: #b5d3bf; }
-  .fb.no { background: var(--warn-t); border-color: #e8cc93; }
-  .badge { display: inline-block; font: 600 .76rem/1.4 var(--label); letter-spacing: .05em; text-transform: uppercase; padding: 2px 9px; border-radius: 99px; background: var(--pane); color: var(--quiet); border: 1px solid var(--line); }
-  .badge.sample { background: var(--warn-t); color: var(--warn); border-color: #e8cc93; }
-  .badge.approved { background: var(--leaf-t); color: var(--leaf); border-color: #b5d3bf; }
-  .badge.overridden { background: var(--judge-t); color: var(--judge); border-color: #c3cbe8; }
-  .bar { height: 22px; border-radius: 6px; background: var(--iron-2); transition: width .3s cubic-bezier(.16,1,.3,1); }
+  .fb { padding: 14px 16px; border-radius: 20px; margin: 12px 0; font-weight: 600; }
+  .fb.ok { background: var(--green-t); }
+  .fb.ok b:first-child { color: var(--green-d); }
+  .fb.no { background: var(--amber-t); }
+  .badge { display: inline-block; font: 700 .74rem/1.4 var(--display); padding: 3px 10px; border-radius: 99px; background: var(--cream); color: var(--quiet); border: 1.5px solid var(--line); }
+  .badge.sample { background: var(--amber-t); color: #7a4b00; border-color: var(--amber); }
+  .badge.approved { background: var(--green-t); color: var(--green-d); border-color: #9fe7b8; }
+  .badge.overridden { background: var(--orange-t); color: var(--orange-d); border-color: #f9b897; }
+  .badge.pending, .badge.approved, .badge.overridden { text-transform: capitalize; }
+  .bar { height: 22px; border-radius: 99px; background: var(--green); border: 2px solid var(--ink); transition: width .3s cubic-bezier(.16,1,.3,1); }
   .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
   .muted { color: var(--quiet); font-size: .93rem; }
 
-  footer { position: fixed; bottom: 0; left: 0; right: 0; background: var(--iron); color: #cddfd2; padding: 10px 16px; font-size: .88rem; display: flex; justify-content: space-between; gap: 6px 14px; flex-wrap: wrap; }
-  footer b { color: var(--enamel); letter-spacing: .04em; }
-  footer a { color: var(--enamel); }
+  /* Bottom dock: black-outlined pill bar; the current place is the orange pill. Identity token underneath. */
+  footer { position: fixed; left: 0; right: 0; bottom: 0; padding: 10px 12px 8px; background: linear-gradient(to top, var(--cream) 70%, transparent); }
+  .dock { display: flex; gap: 6px; max-width: 420px; margin: 0 auto; padding: 5px; background: var(--paper); border: 2.5px solid var(--ink); border-radius: 999px; box-shadow: var(--lift); }
+  .dock a { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 46px; border-radius: 999px; border: 2px solid var(--ink); color: var(--ink); text-decoration: none; font: 700 .92rem/1 var(--display); }
+  .dock a:hover { background: var(--amber-t); }
+  .dock a.on { background: var(--orange); color: #fff; border-color: var(--orange); }
+  .id { text-align: center; margin: 6px 0 0; font: 700 .8rem/1.2 var(--display); color: var(--quiet); }
+  .id b { color: var(--ink); letter-spacing: .04em; }
   @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 </style>
 </head>
 <body>
 <main id="app"></main>
-<footer><span>ET 617 End-Sem · <b>24B0354</b></span><span><a href="#">Learner</a> · <a href="#teacher">Teacher view</a> · <a href="#about">About</a></span></footer>
+<footer>
+  <nav class="dock" aria-label="Main">
+    <a href="#"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11 12 4l8 7v9h-5v-6H9v6H4z"/></svg>Learner</a>
+    <a href="#teacher"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4h6v3H9zM9 13l2 2 4-4"/></svg>Teacher</a>
+    <a href="#about"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/></svg>About</a>
+  </nav>
+  <p class="id">ET 617 End-Sem · <b>24B0354</b></p>
+</footer>
 <script src="app.js"></script>
 </body>
 </html>
