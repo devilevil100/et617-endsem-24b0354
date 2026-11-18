@@ -259,10 +259,13 @@ const V = {
     <p><button data-act="predict">Lock in my prediction</button></p>`,
 
   ledger: () => {
-    const intro = { M1: 'You said <b>soil</b>. Let us test it the way van Helmont did: weigh the soil before and after.',
-      M2: 'You said <b>water</b>. Hold that thought, because we will come back to it. First, let us rule the soil in or out.',
-      core: 'You said <b>air</b>. A good scientist still rules out the rivals. Let us weigh the soil.',
-      adv: 'You are <b>certain</b> it is air. Then this should be quick: prove the soil is not the source.' }[S.path];
+    // Each prediction gets its own test: soil here (the only thing van Helmont could weigh), water in Step 4 (the oven).
+    const intro = S.predict?.choice === 'Sunlight'
+      ? 'You said <b>sunlight</b>. Light brings energy, not atoms, so we still need to find where the atoms came from. First, test the soil.'
+      : { M1: 'You said <b>soil</b>. That is exactly what van Helmont tested: he weighed the soil before and after.',
+        M2: 'You said <b>water</b>. So did van Helmont! He only ever added rainwater, and he could not weigh the water the tree used. But he could weigh the soil, so let us rule soil in or out first. <b>Your water idea gets its own test in Step 4</b>, with the drying oven.',
+        core: 'You said <b>air</b>. Nobody can weigh the air a tree takes in, but we can rule out the rival idea: weigh the soil.',
+        adv: 'You are <b>certain</b> it is air. Then prove the rival wrong: show that the soil is not the source.' }[S.path];
     const L = S.ledger;
     return `${steps()}<h2>Step 2 · Evidence lab: van Helmont's ledger</h2><p>${intro}</p>
     <div class="card"><table class="ledger"><caption class="muted">All masses in kg</caption><tr><th></th><th>Start</th><th>After 5 yr</th><th>Change</th></tr>
@@ -275,9 +278,9 @@ const V = {
   },
 
   roundtable: () => `${steps()}<h2>Step 3 · The round-table</h2>
-    <p>${{
+    <p>${S.predict?.choice === 'Sunlight' ? 'The ledger has ruled out soil: it explains only <mark>0.08%</mark> of the tree\'s gain. You predicted <b>sunlight</b>, but light brings energy, not atoms. Tell the agents, in 2–3 sentences, where the atoms came from.' : {
       M1: 'You predicted <b>soil</b>. But the ledger shows soil explains only <mark>0.08%</mark> of the tree\'s 74.4 kg gain. So where did the rest come from? Tell the agents in 2–3 sentences.',
-      M2: 'The ledger has ruled out soil: it explains only <mark>0.08%</mark> of the tree\'s gain. You predicted <b>water</b>. Tell the agents, in 2–3 sentences, how water could make up the 74 kg.',
+      M2: 'The ledger has ruled out soil: it explains only <mark>0.08%</mark> of the tree\'s gain. You predicted <b>water</b>, like van Helmont. Tell the agents, in 2–3 sentences, how water could make up the 74 kg. Step 4 will put your idea to the test.',
       core: 'The ledger has ruled out soil: it explains only <mark>0.08%</mark> of the tree\'s gain. You predicted <b>air</b>. Tell the agents, in 2–3 sentences, how air turns into tree.',
       adv: 'The ledger agrees with you: soil explains only <mark>0.08%</mark> of the gain. Now convince the agents, in 2–3 sentences, how air turns into tree.' }[S.path] || 'Soil explains only <mark>0.08%</mark> of the tree\'s gain. Where did the rest come from? Tell the agents in 2–3 sentences.'}</p>
     <div class="podium" aria-label="Speaking order: Dr. Leaf explains, Skeptic challenges, the Evidence Judge decides on your feedback">
