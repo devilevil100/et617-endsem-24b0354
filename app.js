@@ -305,10 +305,14 @@ const V = {
     return `<div class="arch"><h1>Teacher view</h1></div><p class="muted">Mr. D'Souza · Olympiad batch. Approve or override every AI judgement. The learner's app picks up your decision within 15 seconds, on any device.</p>
     <div class="card"><label for="who"><b>Learner</b></label> <span class="badge">${esc(src)}</span>
     ${T.learners?.length ? `<select id="who" style="margin-top:8px">${T.learners.map(l => `<option value="${esc(l.id)}" ${l.id === T.cur ? 'selected' : ''}>${esc(l.name || 'Unnamed')} · ${esc(l.state?.screen ?? '')} · ${new Date(l.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</option>`).join('')}</select>` : ''}</div>
-    <div class="card"><b>${esc(L.name || '(learner has not started)')}</b>, now on <b>${esc(L.screen)}</b><br>
-    Prediction: <b>${esc(L.predict?.choice ?? '-')}</b> (${esc(L.predict?.conf ?? '-')}). "${esc(L.predict?.why ?? '')}"<br>
-    Path chosen by the system: <b>${esc({ M1: 'Soil misconception', M2: 'Water misconception', core: 'Core', adv: 'Olympiad (advanced)' }[L.path] ?? '-')}</b><br>
-    Ledger: ${L.ledger ? (L.ledger.ok ? 'correct' : 'in progress') + ` (${L.ledger.tries} tries)` : '-'} · Disagreement: ${L.dis ? (L.dis.ok ? 'resolved' : 'trying') + ` (oven max ${L.dis.maxH ?? 0} h)` : '-'} · Hints: ${L.hints}</div>
+    <div class="card"><h3 style="margin-top:0">${esc(L.name || 'Learner')} <span class="badge">now on: ${esc(STEP_NAMES[STEPS.indexOf(L.screen)] ?? 'Welcome')}</span></h3>
+    <table class="facts">
+      <tr><th>Prediction</th><td><b>${esc(L.predict?.choice ?? 'not yet')}</b>${L.predict ? ` (${esc(L.predict.conf)})` : ''}${L.predict?.why ? `<br><span class="muted">"${esc(L.predict.why)}"</span>` : ''}</td></tr>
+      <tr><th>Path</th><td>${esc({ M1: 'Soil misconception', M2: 'Water misconception', core: 'Core', adv: 'Olympiad (advanced)' }[L.path] ?? '-')}</td></tr>
+      <tr><th>Ledger</th><td>${L.ledger ? `${L.ledger.ok ? 'correct' : 'not yet'} · ${L.ledger.tries} ${L.ledger.tries === 1 ? 'try' : 'tries'}` : '-'}</td></tr>
+      <tr><th>Disagreement</th><td>${L.dis?.tries ? `${L.dis.ok ? 'resolved' : 'not resolved'} · oven used up to ${L.dis.maxH ?? 0} h` : '-'}</td></tr>
+      <tr><th>Hints</th><td>${L.hints ?? 0}</td></tr>
+    </table></div>
     <div class="card"><table><tr><th>Task</th><th>Answer</th><th>Tries</th><th>Result</th></tr>
     ${Object.keys(TASKS).filter(id => L.ans[id]?.value !== undefined).map(id => { const a = L.ans[id]; return `<tr><td>${id.toUpperCase()}</td><td>${esc(Array.isArray(a.value) ? a.value.join(', ') : a.value)}</td><td>${a.tries}</td><td>${a.ok ? 'correct' : 'wrong'}${a.mis ? ' ' + a.mis : ''}</td></tr>`; }).join('') || '<tr><td colspan="4" class="muted">No answers yet.</td></tr>'}</table></div>
     <h2>AI feedback queue</h2><p class="muted">Flagged items (the AI and the rule check disagree) come first.</p>${[...L.fb].sort((a, b) => (b.flag && b.status === 'pending') - (a.flag && a.status === 'pending')).map(f => `<div class="card"><div class="row"><b>${esc(f.where)}</b><span class="badge ${f.status}">${f.status}</span>${f.flag ? '<span class="badge sample">flagged: AI and rule check disagree</span>' : ''}${f.source === 'sample' ? '<span class="badge sample">recorded sample</span>' : f.source === 'rules' ? '<span class="badge sample">rule-based judge (AI failed check)</span>' : '<span class="badge">live AI</span>'}<span class="badge">verdict: ${esc(f.verdict)}</span></div>
