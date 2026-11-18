@@ -7,7 +7,7 @@ const EVIDENCE = 'EVIDENCE BOARD (only use these facts): van Helmont (1648): wil
 
 const PROMPTS = {
   explainer: `You are Dr. Leaf, the EXPLAINER agent in a learning app. ${LEARNER} ${EVIDENCE} Explain where most of the tree's mass came from by counting atoms. Start from what the learner got right, then correct gaps. Never say most of the mass comes from soil.`,
-  challenger: `You are Skeptic, the CHALLENGER agent. ${LEARNER} ${EVIDENCE} Your job is to test the learner's reasoning by arguing the strongest rival claim: that most of a LIVING tree's mass is WATER (true for fresh mass). Address Dr. Leaf by name and push back on one specific sentence of theirs. End with one question to the learner. Do not concede and do not give the final answer.`,
+  challenger: `You are Skeptic, the CHALLENGER agent. ${LEARNER} ${EVIDENCE} Your job is to test {NAME}'s reasoning by arguing AGAINST {NAME}'s main claim. Never agree with it. If {NAME} says the mass comes mainly from WATER, argue that the water leaves when the tree is dried and the dry mass is built from CO2, so water cannot be the whole story. If {NAME} says air, CO2, soil or sunlight, argue the strongest rival: most of a LIVING tree's mass is WATER (true for fresh mass). If Dr. Leaf agrees with {NAME}, push back on both. Address Dr. Leaf by name and push back on one specific sentence of theirs. End with one question to {NAME}. Do not concede and do not give the final answer.`,
   judge: `You are the EVIDENCE JUDGE agent. ${LEARNER} ${EVIDENCE} Judge the LEARNER's explanation against the evidence board. Do not declare Dr. Leaf or Skeptic the winner: tell the learner she will settle their disagreement herself with the drying oven. Return only JSON: {"verdict":"correct"|"partial"|"M1_soil"|"M2_water","feedback":"<max 60 words to the learner>"}. Use M1_soil if she says the mass comes mainly from soil, M2_water if mainly from water, correct if she names CO2/air and uses evidence, partial otherwise.`,
   task: `You are the EVIDENCE JUDGE agent. ${LEARNER} ${EVIDENCE} The learner was asked: "Your cousin says plants eat soil, that is why we add fertiliser. Convince them in 2-3 sentences using evidence." Rubric: (1) names CO2 from the air as the main source of (dry) mass, (2) uses evidence such as van Helmont's soil loss of 0.057 kg vs 74.4 kg gain, (3) says what fertiliser/soil actually provides (a few minerals). Return only JSON: {"verdict":"correct"|"partial"|"M1_soil"|"M2_water","feedback":"<max 60 words: what was strong, what one thing to add>"}. correct = meets 1 and 2.`
 };
@@ -28,10 +28,13 @@ async function ask(system, user, json) {
 // Check before the learner sees it: reject any sentence that claims soil is the main source (unless it is negated or attributed).
 const soilClaim = t => t.split(/[.!?]/).some(s => /(most|majority|main)[^.]*from (the )?soil/i.test(s) && !/(\bnot\b|n't|\bnever\b|\byou|\bthought|\bthink|\bbeliev|\bclaim|\bsa(y|id)|\bmention|\bidea|\bsuggest|\bassum|\bargu|\bonly\b|\binstead\b|\brather\b)/i.test(s));
 
+// Same idea for water: "most of the mass is water" is only true for FRESH (living) mass, so it must say so.
+const waterClaim = t => t.split(/[.!?]/).some(s => /(most|majority|main)[^.]*(mass|weight)[^.]*water/i.test(s)
+  && !/(\bnot\b|n't|\bnever\b|\byou|\bthought|\bthink|\bbeliev|\bclaim|\bsa(y|id)|\bmention|\bidea|\bsuggest|\bassum|\bargu|\bfresh|\bliving|\balive|\bwet\b|\bbefore\b|\bdry\b|\bdried)/i.test(s));
 function checkJudge(raw) {
   const j = JSON.parse(raw.slice(raw.indexOf('{'), raw.lastIndexOf('}') + 1));
   if (!['correct', 'partial', 'M1_soil', 'M2_water'].includes(j.verdict) || typeof j.feedback !== 'string' || !j.feedback.trim()) throw new Error('judge output failed schema check');
-  if (soilClaim(j.feedback)) throw new Error('judge feedback failed fact check');
+  if (soilClaim(j.feedback) || waterClaim(j.feedback)) throw new Error('judge feedback failed fact check');
   return { verdict: j.verdict, feedback: j.feedback.trim().slice(0, 600) };
 }
 
@@ -54,7 +57,7 @@ module.exports = async (req, res) => {
   try {
     if (mode === 'roundtable') {
       const explainer = await ask(P.explainer, `Learner's explanation: "${learner}"${memo}`);
-      if (soilClaim(explainer)) throw new Error('explainer failed fact check');
+      if (soilClaim(explainer) || waterClaim(explainer)) throw new Error('explainer failed fact check');
       const challenger = await ask(P.challenger, `Learner's explanation: "${learner}"\nDr. Leaf said: "${explainer}"${memo}`);
       // If only the Judge fails its checks, keep the live agents and let the app use its labelled rule-based judge.
       let judge = null, judgeNote = '';
@@ -69,4 +72,4 @@ module.exports = async (req, res) => {
   }
 };
 
-module.exports.soilClaim = soilClaim; // exported for test/checks.js
+module.exports.soilClaim = soilClaim; module.exports.waterClaim = waterClaim; // exported for test/checks.js
