@@ -99,6 +99,7 @@
 </table>
 <p><b>C5, as it appears in the app:</b> every AI judgement (round-table and T5) shows a badge: <i>Waiting for teacher review</i>, <i>Approved by your teacher</i> or <i>Your teacher rewrote this feedback</i>. The teacher view lists each judgement with the learner's text, the AI verdict and its source (live AI or recorded sample), plus Approve and Override buttons.</p>
 <p><b>Stack:</b> static HTML/CSS/JS (no UI library or template), plus one Vercel serverless function <code>/api/agents</code> calling OpenRouter. The key is stored as a Vercel environment variable. Progress is saved in <code>localStorage</code>, so the learner can stop and resume.</p>
+<p><b>Visual design ("Glasshouse"):</b> a bottle-green iron frame whose arched glass panes light up one per step (the progress indicator), a pale glass-green background, agents on white enamel "plant plaque" cards that each show the evidence they lean on, and sunlight amber for the learner's highlights. Type: Fraunces (headings), Barlow Condensed (plaque labels) and Atkinson Hyperlegible (body, chosen for legibility; its slashed zero keeps 0 and O apart in numbers). The direction was chosen from options proposed by the Impeccable design skill for Claude Code. No UI library or template was used.</p>
 
 <h2>D5 · Two contrasting learner scenarios (live app)</h2>
 <h3>(a) Learner who responds correctly</h3>
@@ -175,6 +176,7 @@ You are the EVIDENCE JUDGE agent. The learner is Ishita, 15, a Class 10 Olympiad
 <h2>AI-use log and reflection</h2>
 <ol>
 <li><b>Claude Code (Claude Opus 5.5), one continuous session, 6:00–8:00 PM:</b> card selection, DESIGN.md, app code, agent prompts, testing on the live site, report draft. Export: <i>[attach the /export transcript]</i>.</li>
+<li><b>Impeccable design skill (Claude Code plugin)</b>: proposed visual directions. I chose "Glasshouse", and Claude implemented it in CSS.</li>
 <li><b>OpenRouter (gpt-4o-mini)</b> inside the app: the three agents and the T5 judge (prompts in D6).</li>
 </ol>
 <p><b>Reflection:</b> <i>[Write in your own words: what you asked AI to do and what you decided yourself (the card, the persona, the fresh-vs-dry disagreement), what you verified (the arithmetic: 76.7 − 2.3 = 74.4 kg; 0.057 ÷ 74.4 = 0.077%; glucose 168 of 180 g from CO₂), where AI was wrong or risky, and what you would not let AI decide (the final verdict, which goes to the teacher).]</i></p>
