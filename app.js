@@ -276,11 +276,10 @@ const V = {
 
   roundtable: () => `${steps()}<h2>Step 3 · The round-table</h2>
     <p>${{
-      M1: 'You predicted <b>soil</b>, but soil explains only <mark>0.08%</mark>. What do you think now?',
-      M2: 'You predicted <b>water</b>, and soil explains only <mark>0.08%</mark>. Is water the whole story?',
-      core: 'You predicted <b>air</b>, and soil explains only <mark>0.08%</mark>. Now show how air becomes tree.',
-      adv: 'You were <b>certain</b> it is air. Soil explains only <mark>0.08%</mark>. Now convince the agents.' }[S.path] || 'Soil explains only <mark>0.08%</mark>. So where did the rest come from?'}
-    <b>Tell the agents</b> in 2–3 sentences.</p>
+      M1: 'You predicted <b>soil</b>. But the ledger shows soil explains only <mark>0.08%</mark> of the tree\'s 74.4 kg gain. So where did the rest come from? Tell the agents in 2–3 sentences.',
+      M2: 'The ledger has ruled out soil: it explains only <mark>0.08%</mark> of the tree\'s gain. You predicted <b>water</b>. Tell the agents, in 2–3 sentences, how water could make up the 74 kg.',
+      core: 'The ledger has ruled out soil: it explains only <mark>0.08%</mark> of the tree\'s gain. You predicted <b>air</b>. Tell the agents, in 2–3 sentences, how air turns into tree.',
+      adv: 'The ledger agrees with you: soil explains only <mark>0.08%</mark> of the gain. Now convince the agents, in 2–3 sentences, how air turns into tree.' }[S.path] || 'Soil explains only <mark>0.08%</mark> of the tree\'s gain. Where did the rest come from? Tell the agents in 2–3 sentences.'}</p>
     <div class="podium" aria-label="Speaking order: Dr. Leaf explains, Skeptic challenges, the Evidence Judge decides on your feedback">
       <div class="col"><span class="av big">${FACE.leaf}</span><b>Dr. Leaf</b><small>explains</small><div class="blk b1">1st</div></div>
       <div class="col"><span class="av big">${FACE.skep}</span><b>Skeptic</b><small>challenges</small><div class="blk b2">2nd</div></div>
