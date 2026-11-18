@@ -7,7 +7,7 @@ const EVIDENCE = 'EVIDENCE BOARD (only use these facts): van Helmont (1648): wil
 
 const PROMPTS = {
   explainer: `You are Dr. Leaf, the EXPLAINER agent in a learning app. ${LEARNER} ${EVIDENCE} Explain where most of the tree's mass came from by counting atoms. Start from what the learner got right, then correct gaps. Never say most of the mass comes from soil.`,
-  challenger: `You are Skeptic, the CHALLENGER agent. ${LEARNER} ${EVIDENCE} Your job is to test {NAME}'s reasoning by arguing AGAINST {NAME}'s main claim. Never agree with it. If {NAME} says the mass comes mainly from WATER, argue that the water leaves when the tree is dried and the dry mass is built from CO2, so water cannot be the whole story. If {NAME} says air, CO2, soil or sunlight, argue the strongest rival: most of a LIVING tree's mass is WATER (true for fresh mass). If Dr. Leaf agrees with {NAME}, push back on both. Address Dr. Leaf by name and push back on one specific sentence of theirs. End with one question to {NAME}. Do not concede and do not give the final answer.`,
+  challenger: `You are Skeptic, the CHALLENGER agent. ${LEARNER} ${EVIDENCE} Your job is to test {NAME}'s reasoning by arguing AGAINST it. Never agree with {NAME}. YOUR POSITION: {STANCE} Address Dr. Leaf by name and push back on one specific sentence of theirs. End with one question to {NAME}. Do not concede and do not give the final answer.`,
   judge: `You are the EVIDENCE JUDGE agent. ${LEARNER} ${EVIDENCE} Judge the LEARNER's explanation against the evidence board. Do not declare Dr. Leaf or Skeptic the winner: tell the learner she will settle their disagreement herself with the drying oven. Return only JSON: {"verdict":"correct"|"partial"|"M1_soil"|"M2_water","feedback":"<max 60 words to the learner>"}. Use M1_soil if she says the mass comes mainly from soil, M2_water if mainly from water, correct if she names CO2/air and uses evidence, partial otherwise.`,
   task: `You are the EVIDENCE JUDGE agent. ${LEARNER} ${EVIDENCE} The learner was asked: "Your cousin says plants eat soil, that is why we add fertiliser. Convince them in 2-3 sentences using evidence." Rubric: (1) names CO2 from the air as the main source of (dry) mass, (2) uses evidence such as van Helmont's soil loss of 0.057 kg vs 74.4 kg gain, (3) says what fertiliser/soil actually provides (a few minerals). Return only JSON: {"verdict":"correct"|"partial"|"M1_soil"|"M2_water","feedback":"<max 60 words: what was strong, what one thing to add>"}. correct = meets 1 and 2.`
 };
@@ -50,7 +50,12 @@ module.exports = async (req, res) => {
   const learner = String(text).slice(0, 800).replace(/"/g, "'");
   // The learner's real first name goes into every prompt (letters, spaces, . ' - only).
   const name = String(req.body?.name || '').replace(/[^\p{L}\p{M} .'-]/gu, '').trim().slice(0, 30) || 'the learner';
-  const P = Object.fromEntries(Object.entries(PROMPTS).map(([k, v]) => [k, v.replaceAll('{NAME}', name)]));
+  // Skeptic's position is decided here, not by the model: always the opposite of the learner's main claim.
+  const saysWater = /water/i.test(learner) && !/co2|co₂|carbon dioxide|\bair\b|carbon/i.test(learner);
+  const stance = saysWater
+    ? 'the water leaves when a tree is dried, and the dry mass that stays is built from CO2, so water cannot be the whole story.'
+    : 'most of a LIVING (fresh) tree\'s mass is WATER, so CO2 or soil cannot be the whole story. This is true for fresh mass.';
+  const P = Object.fromEntries(Object.entries(PROMPTS).map(([k, v]) => [k, v.replaceAll('{NAME}', name).replaceAll('{STANCE}', stance)]));
   // Agent memory across turns: the Judge's earlier verdict is passed to the agents in the next turn.
   const memo = prev && ['correct', 'partial', 'M1_soil', 'M2_water'].includes(prev.verdict)
     ? `\nThe Evidence Judge's EARLIER verdict on this learner: ${prev.verdict} ("${String(prev.feedback || '').slice(0, 300).replace(/"/g, "'")}"). Build on it: target that gap, and say if she has moved past it.` : '';
