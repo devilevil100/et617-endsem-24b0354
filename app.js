@@ -213,9 +213,10 @@ const SLIDES = () => [
           <li><span class="av">${FACE.judge}</span><span><b>Evidence Judge</b><small>checks every claim, gives you feedback</small></span></li>
         </ul><p class="note">They will not always agree. <b>You</b> settle it, with evidence.</p></section>`];
 const carousel = (d = 0) => { const at = k => (CI + k + 3) % 3;
-  return `<div class="side left" style="background:${SLIDE_BG[at(-1)]}" data-act="turn" data-arg="-1" aria-hidden="true"></div>
+  const chev = d => `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${d}"/></svg>`;
+  return `<button class="side left" style="background:${SLIDE_BG[at(-1)]}" data-act="turn" data-arg="-1" aria-label="Previous slide">${chev('M15 6l-6 6 6 6')}</button>
   <div class="center ${d > 0 ? 'in-right' : d < 0 ? 'in-left' : ''}" aria-live="polite">${SLIDES()[CI]}</div>
-  <div class="side right" style="background:${SLIDE_BG[at(1)]}" data-act="turn" data-arg="1" aria-hidden="true"></div>`; };
+  <button class="side right" style="background:${SLIDE_BG[at(1)]}" data-act="turn" data-arg="1" aria-label="Next slide">${chev('M9 6l6 6-6 6')}</button>`; };
 function paint(d) { $('car').innerHTML = carousel(d); document.querySelectorAll('.pager .dot').forEach((x, k) => x.classList.toggle('on', k === CI)); }
 // Teacher queue: Pending first, one-tap approve, bulk approve, and edit-in-place starting from the AI's text.
 function queue(L) {
@@ -502,6 +503,17 @@ addEventListener('storage', e => { if (e.key === KEY) { S = load(); render(); } 
 let sx = null;
 document.addEventListener('pointerdown', e => { sx = e.target.closest('#car') ? e.clientX : null; });
 document.addEventListener('pointerup', e => { if (sx === null) return; const dx = e.clientX - sx; sx = null; if (Math.abs(dx) > 40) ACT.turn(dx < 0 ? 1 : -1); });
+document.addEventListener('pointercancel', () => { sx = null; });
+document.addEventListener('dragstart', e => { if (e.target.closest?.('#car')) e.preventDefault(); });
+// Trackpad two-finger swipe / horizontal wheel: one turn per gesture.
+let wx = 0, wlock = 0;
+document.addEventListener('wheel', e => {
+  if (!e.target.closest?.('#car') || Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+  e.preventDefault();
+  if (Date.now() < wlock) return;
+  wx += e.deltaX;
+  if (Math.abs(wx) > 50) { ACT.turn(wx > 0 ? 1 : -1); wx = 0; wlock = Date.now() + 650; }
+}, { passive: false });
 document.addEventListener('keydown', e => { if (document.activeElement?.id === 'car' && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) ACT.turn(e.key === 'ArrowRight' ? 1 : -1); });
 addEventListener('hashchange', () => { render(); if (location.hash === '#teacher') loadLearners(); });
 document.addEventListener('change', e => { if (e.target.id === 'who') { T.cur = e.target.value; render(); } });
