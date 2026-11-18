@@ -24,12 +24,24 @@ async function pullReviews() {
 }
 // Teacher device: the class list from the database (falls back to this device's learner).
 const T = { learners: null, cur: null, err: false, bad: false, code: (() => { try { return sessionStorage.getItem('tcode') || ''; } catch { return ''; } })() };
+// Remote learner states are untrusted: coerce every field the teacher view prints without escaping.
+const num = v => Number(v) || 0, safeId = v => String(v ?? '').replace(/[^\w-]/g, '').slice(0, 64);
+function clean(st) {
+  st = st && typeof st === 'object' ? st : {};
+  st.hints = num(st.hints);
+  if (st.ledger) st.ledger.tries = num(st.ledger.tries);
+  if (st.dis) { st.dis.maxH = num(st.dis.maxH); st.dis.tries = num(st.dis.tries); }
+  st.fb = (Array.isArray(st.fb) ? st.fb : []).map(f => ({ ...f, id: safeId(f.id), status: ['approved', 'overridden'].includes(f.status) ? f.status : 'pending', flag: !!f.flag }));
+  st.ans = st.ans && typeof st.ans === 'object' ? st.ans : {};
+  for (const k in st.ans) { const a = st.ans[k] || {}; a.tries = num(a.tries); a.ok = !!a.ok; a.mis = ['M1', 'M2'].includes(a.mis) ? a.mis : null; st.ans[k] = a; }
+  return st;
+}
 async function loadLearners() {
   if (!T.code) { if (location.hash === '#teacher') render(); return; }
   try {
     const r = await fetch(`/api/sync?action=learners&code=${encodeURIComponent(T.code)}`);
     if (r.status === 401) { T.bad = true; T.code = ''; try { sessionStorage.removeItem('tcode'); } catch {} }
-    const d = await r.json(); if (!d.ok) throw 0; T.learners = d.learners; T.err = false;
+    const d = await r.json(); if (!d.ok) throw 0; T.learners = d.learners.map(l => ({ ...l, id: safeId(l.id), state: clean(l.state) })); T.err = false;
     if (!T.learners.some(l => l.id === T.cur)) T.cur = T.learners[0]?.id ?? null; }
   catch { T.err = !T.bad; T.learners = null; }
   if (location.hash === '#teacher' && !typing()) render();
@@ -445,6 +457,8 @@ const ACT = {
   },
   verdict() {
     const fresh = picked('fresh'), dry = picked('dry'); if (!fresh || !dry) return say('Answer both questions.');
+    // Evidence first: the verdict needs the oven run until the mass stops changing.
+    if ((S.dis?.maxH ?? 0) < 36) return say('Run the oven first: drag the slider to 48 hours and see what is left.');
     const ok = fresh === 'Water' && dry === 'Matter built from CO₂';
     const tries = (S.dis?.tries ?? 0) + 1;
     const fb = ok ? `<div class="fb ok"><b>You settled it, and both agents were partly right.</b> Skeptic is right about the <b>fresh</b> tree: about 88% of a living leaf is water. Dr. Leaf is right about the <b>dry</b> tree: the 12 g that never evaporates is mostly carbon and oxygen atoms built from CO₂. Van Helmont weighed a living tree, so his 74 kg was mostly water, but the part that stays is built from air.</div>`

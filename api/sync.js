@@ -13,6 +13,7 @@ module.exports = async (req, res) => {
     return res.status(401).json({ ok: false, error: 'teacher code required' });
   try {
     if (q.action === 'push' && id && q.state) {          // learner device saves its progress
+      if (JSON.stringify(q.state).length > 300000) return res.status(413).json({ ok: false, error: 'state too large' });
       await pool.query(`insert into learners (id, name, state, updated_at) values ($1, $2, $3, now())
         on conflict (id) do update set name = excluded.name, state = excluded.state, updated_at = now()`, [id, String(q.name || '').slice(0, 40), q.state]);
       return res.json({ ok: true });
