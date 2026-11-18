@@ -111,7 +111,7 @@ const ALT = `<div class="card"><h3 style="margin-top:0">Let us try it another wa
 // ---------- views ----------
 const V = {
   welcome: () => `<h1>The Willow Mystery</h1>
-    <p class="lead">In 1648, Jan van Helmont planted a <b>2.3 kg</b> willow in <b>90.7 kg</b> of dried soil. He gave it only rainwater. Five years later the tree weighed <mark>76.7 kg</mark>.</p>
+    <p class="lead">In the 1640s, Jan van Helmont planted a <b>2.3 kg</b> willow in <b>90.7 kg</b> of dried soil. He gave it only rainwater. Five years later the tree weighed <mark>76.7 kg</mark>.</p>
     <p class="lead">Where did <b>74 kg</b> of tree come from? Let us put the question on trial with three AI agents who will <b>not</b> always agree.</p>
     <div class="card"><label for="name"><b>Your first name</b></label><input id="name" type="text" value="${esc(S.name)}" placeholder="e.g. Ishita" autocomplete="given-name">
     <p class="muted">About 15 minutes. Your progress saves on this device, so you can stop and come back. Your teacher reviews the AI's feedback.</p>

@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ET 617 End-Sem Report · 24B0354</title>
+<style>
+  body { font: 11pt/1.45 system-ui, "Segoe UI", sans-serif; color:#1d2321; max-width: 780px; margin: 0 auto; padding: 24px; }
+  h1 { font-size: 20pt; margin-bottom: 4px; } h2 { font-size: 14pt; border-bottom: 2px solid #1d2321; padding-bottom: 3px; margin-top: 26px; page-break-after: avoid; }
+  h3 { font-size: 12pt; margin-bottom: 4px; page-break-after: avoid; }
+  table { border-collapse: collapse; width: 100%; margin: 8px 0; font-size: 10pt; page-break-inside: avoid; }
+  th, td { border: 1px solid #c8cfcb; padding: 5px 7px; text-align: left; vertical-align: top; }
+  th { background: #eef1ee; }
+  code, pre { font: 9pt/1.4 ui-monospace, monospace; } pre { background: #f4f5f2; padding: 8px; white-space: pre-wrap; border-radius: 6px; page-break-inside: avoid; }
+  .shots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; page-break-inside: avoid; }
+  .shots figure { margin: 0; } .shots img { width: 100%; border: 1px solid #c8cfcb; } figcaption { font-size: 8.5pt; color: #5b6662; }
+  .muted { color:#5b6662; }
+</style>
+</head>
+<body>
+<h1>The Willow Mystery</h1>
+<p class="muted">ET 617 End-Semester Examination · 18 November 2026 · Report</p>
+
+<h2>Identity card</h2>
+<table>
+<tr><th>Roll number (ID)</th><td><b>24B0354</b></td></tr>
+<tr><th>P: Problem</th><td>P3 Multi-agent collaborative learning environment</td></tr>
+<tr><th>T: Topic</th><td>P3-T9 Where does a plant's mass come from? (Cl. 7–10)</td></tr>
+<tr><th>L: Learner context</th><td>L6 High-achieving learner preparing for an Olympiad, bored by routine practice</td></tr>
+<tr><th>C: Design constraint</th><td>C5 Teacher-in-the-loop</td></tr>
+<tr><th>Live app</th><td><a href="https://et617-24b0354.vercel.app">https://et617-24b0354.vercel.app</a></td></tr>
+<tr><th>Repository</th><td><a href="https://github.com/devilevil100/et617-endsem-24b0354">https://github.com/devilevil100/et617-endsem-24b0354</a></td></tr>
+</table>
+
+<h2>D1 · Educational problem</h2>
+<p>Strong Class 9–10 students can write 6CO₂ + 6H₂O → C₆H₁₂O₆ + 6O₂, yet when asked where a tree's mass comes from most answer "the soil" or "water". The equation is memorised as a fact about food, never used to account for <i>mass</i>. Routine NCERT exercises never catch this, so Olympiad aspirants are both bored and left with an alternate conception. The Willow Mystery puts the question on trial. The learner predicts, weighs van Helmont's evidence, and explains to three AI agents who explain, challenge and judge. She then settles the agents' disagreement herself with a drying-oven tool, while her coach approves or overrides every AI judgement.</p>
+<h3>Learning outcomes</h3>
+<ol>
+<li><b>Explain</b>, using the photosynthesis equation, that most of a plant's <i>dry</i> mass comes from carbon dioxide in the air (its carbon and oxygen atoms), not from the soil.</li>
+<li><b>Interpret</b> van Helmont's willow data (tree +74.4 kg, soil −0.057 kg) to <b>reject</b> the soil hypothesis quantitatively (soil explains ≈ 0.08% of the gain).</li>
+<li><b>Compare</b> fresh mass with dry mass and <b>predict</b> which source (water, CO₂, soil minerals) dominates each.</li>
+</ol>
+<p><b>Context of use:</b> home self-study in a 20–30 minute evening slot after coaching class, on the learner's Android phone or the family laptop (Chrome), in English. Her coach reviews the AI feedback queue on the same device or later.</p>
+
+<h2>D2 · Learner persona</h2>
+<table>
+<tr><th>Name, age</th><td>Ishita Rao, 15, Class 10 (CBSE), Pune</td></tr>
+<tr><th>Goal</th><td>NSEJS / IJSO (junior science Olympiad) selection</td></tr>
+<tr><th>Prior knowledge</th><td>Can write and balance the photosynthesis equation. Knows roots absorb water and minerals and that fertiliser "feeds" plants. Knows conservation of mass and basic molar mass. Has never connected the equation to where a plant's <i>mass</i> comes from.</td></tr>
+<tr><th>Misconception M1 (soil)</th><td>"Plants grow by taking matter from the soil. That's why we add fertiliser." (Soil as food.)</td></tr>
+<tr><th>Misconception M2 (water)</th><td>"Most of a plant's mass is water from the roots." True for fresh mass, but wrong for the dry mass that photosynthesis builds.</td></tr>
+<tr><th>Device, time</th><td>Own Android phone (Chrome) and family laptop. 25-minute slots, 8–9 PM.</td></tr>
+<tr><th>Language</th><td>English for study (English-medium school); Marathi at home</td></tr>
+<tr><th>Motivation</th><td>Wants hard, non-routine "trick" questions and arguments. Switches off during drill. Accepts being proven wrong by evidence, not by authority.</td></tr>
+<tr><th>Teacher (C5)</th><td>Mr. D'Souza, her Olympiad coach, reviews AI feedback for a batch of 6 students</td></tr>
+</table>
+
+<h2>D3 · Educational content</h2>
+<h3>Concept explanation (as shown in the app)</h3>
+<p><b>Ledger:</b> van Helmont's willow went from 2.3 kg to 76.7 kg (+74.4 kg). The dried soil went from 90.700 kg to 90.643 kg (−0.057 kg). So soil could explain at most 0.057 ÷ 74.4 × 100 ≈ <b>0.08%</b> of the gain.<br>
+<b>Atom bookkeeping (alternative explanation, "atoms as LEGO bricks"):</b> in 6CO₂ + 6H₂O → C₆H₁₂O₆ + 6O₂, all 6 carbon atoms arrive in CO₂ and all 12 hydrogens in water. The released O₂ is water's oxygen (Ruben &amp; Kamen, ¹⁸O, 1941), so the sugar's 6 oxygens came from CO₂. By mass, glucose is 72 g C + 96 g O + 12 g H per 180 g: <b>168 of every 180 g comes from CO₂</b>.<br>
+<b>Fresh vs dry:</b> 100 g of fresh leaves dried at 70 °C fall to about 12 g. A living tree is mostly water, but the dry matter that stays is built mostly from air.</p>
+<h3>Tasks (7 items, 5 formats)</h3>
+<table>
+<tr><th>#</th><th>Format</th><th>Task</th><th>Model answer</th><th>LO</th></tr>
+<tr><td>P</td><td>MCQ + confidence + reason</td><td>Where did most of the willow's 74.4 kg come from? (soil / water / air / sunlight)</td><td>Air (CO₂). Diagnostic only: it sets the path.</td><td>1</td></tr>
+<tr><td>L</td><td>Calculation tool</td><td>Fill in the ledger: tree change, soil change</td><td>+74.4 kg; −0.057 kg</td><td>2</td></tr>
+<tr><td>D</td><td>Simulation + 2 judgements</td><td>Use the drying oven; for the FRESH tree and for the DRY tree, which is the biggest part of the mass?</td><td>Fresh → water; dry → matter built from CO₂</td><td>3</td></tr>
+<tr><td>T1</td><td>MCQ</td><td>Where did most of the <i>dry</i> mass come from?</td><td>Carbon dioxide from the air</td><td>1</td></tr>
+<tr><td>T2</td><td>Numeric</td><td>What % of the 74.4 kg gain could the 0.057 kg soil loss explain?</td><td>≈ 0.08% (0.07–0.09 accepted)</td><td>2</td></tr>
+<tr><td>T3</td><td>Matching</td><td>Carbon / hydrogen / oxygen in the sugar / nitrogen and magnesium → CO₂, H₂O or soil</td><td>CO₂, H₂O, CO₂, soil</td><td>1</td></tr>
+<tr><td>T4</td><td>Numeric prediction</td><td>Dry mass of 500 g fresh spinach?</td><td>≈ 45 g (30–80 g accepted)</td><td>3</td></tr>
+<tr><td>T5</td><td>Open explanation (AI-judged)</td><td>Cousin says "plants eat soil, that's why we add fertiliser". Convince them in 2–3 sentences with evidence.</td><td>"The soil lost only 0.057 kg while the tree gained 74.4 kg, so soil can't be the source. Most of the dry mass is carbon and oxygen from CO₂ in the air. Fertiliser adds only a few minerals."</td><td>1, 2</td></tr>
+<tr><td>T6</td><td>MCQ (Olympiad twist)</td><td>Ruben &amp; Kamen gave plants ¹⁸O-water. Where did the ¹⁸O end up?</td><td>In the released O₂, so the sugar's O comes from CO₂</td><td>1</td></tr>
+</table>
+<h3>Feedback: correct, M1 and M2 (T1 shown; every task has targeted feedback)</h3>
+<table>
+<tr><th>Response</th><th>Feedback shown</th></tr>
+<tr><td>Correct (CO₂ from the air)</td><td>"Yes! About 90% of dry mass is carbon and oxygen atoms that came in as CO₂."</td></tr>
+<tr><td>M1: soil minerals</td><td>"Remember the ledger: the soil lost 0.057 kg while the tree gained 74.4 kg. Minerals are under 5% of dry mass."</td></tr>
+<tr><td>M2: water from the roots</td><td>"That is true for fresh mass. But the question says dry. The oven removed the water, so what is left?"</td></tr>
+<tr><td>Disagreement, dry = water (M2)</td><td>"Run the oven to 48 hours and watch: the water is driven off, but 12 g stays. Can what is left after drying be water?"</td></tr>
+<tr><td>Disagreement resolved</td><td>"You settled it, and both agents were partly right. Skeptic is right about the fresh tree (≈ 88% water), and Dr. Leaf about the dry tree: the 12 g that never evaporates is mostly carbon and oxygen built from CO₂…"</td></tr>
+</table>
+
+<h2>D4 · Working application</h2>
+<p><b>URL:</b> <a href="https://et617-24b0354.vercel.app">https://et617-24b0354.vercel.app</a>. The identity token <b>24B0354</b> is in the fixed footer of every screen and on the About screen.</p>
+<h3>Screen map</h3>
+<table>
+<tr><th>#</th><th>Screen / state</th><th>Learner input</th><th>System output → transition</th></tr>
+<tr><td>1</td><td>Welcome</td><td>Name</td><td>Story hook (willow 2.3 → 76.7 kg) → Predict</td></tr>
+<tr><td>2</td><td>Predict (diagnostic)</td><td>Choice, confidence, reason</td><td>Sets path M1 / M2 / core / advanced, plus task order → Ledger</td></tr>
+<tr><td>3</td><td>Evidence lab: ledger tool</td><td>Tree and soil change</td><td>Path-specific intro, check, to-scale bars (74.4 kg vs 0.057 kg) → Round-table</td></tr>
+<tr><td>4</td><td>Round-table (3 agents)</td><td>Written explanation</td><td>Dr. Leaf → Skeptic (reads Dr. Leaf) → Judge (reads both) and queues feedback for teacher review → Disagreement</td></tr>
+<tr><td>5</td><td>Disagreement card + drying oven</td><td>Oven slider; fresh and dry verdicts</td><td>Mass curve 100 → 12 g; targeted feedback; retry → Challenge set</td></tr>
+<tr><td>6</td><td>Challenge set (adaptive)</td><td>MCQ, numeric, matching, free text, hints</td><td>Feedback, retry, model answer after 2 tries, alternative explanation after 2 wrong in a row, Olympiad twist unlock → Summary</td></tr>
+<tr><td>7</td><td>Summary</td><td>-</td><td>First-try results per LO, misconceptions tested, hints, time, teacher-reviewed feedback</td></tr>
+<tr><td>8</td><td>Teacher view (#teacher)</td><td>Approve / Override text</td><td>Learner record, answers, AI feedback queue; the learner's tab updates live</td></tr>
+<tr><td>9</td><td>About (#about)</td><td>Reset</td><td>Card, identity token, AI disclosure</td></tr>
+</table>
+<p><b>C5, as it appears in the app:</b> every AI judgement (round-table and T5) shows a badge: <i>Waiting for teacher review</i>, <i>Approved by your teacher</i> or <i>Your teacher rewrote this feedback</i>. The teacher view lists each judgement with the learner's text, the AI verdict and its source (live AI or recorded sample), plus Approve and Override buttons.</p>
+<p><b>Stack:</b> static HTML/CSS/JS (no UI library or template), plus one Vercel serverless function <code>/api/agents</code> calling OpenRouter. The key is stored as a Vercel environment variable. Progress is saved in <code>localStorage</code>, so the learner can stop and resume.</p>
+
+<h2>D5 · Two contrasting learner scenarios (live app)</h2>
+<h3>(a) Learner who responds correctly</h3>
+<p>Predicts <b>Air (CO₂), Certain</b>. The system places her on the <b>advanced path</b>: the ledger intro reads "You are certain it is air. Then this should be quick: prove the soil is not the source". The challenge set opens with the Ruben &amp; Kamen ¹⁸O twist, and the easy items are skipped.</p>
+<div class="shots" id="shots-a"></div>
+<h3>(b) Learner with misconception M1 (soil)</h3>
+<p>Predicts <b>Soil</b>. The system places her on the <b>M1 path</b>: the ledger intro reads "You said soil. Let us test it the way van Helmont did". The Evidence Judge flags the soil idea, a wrong T1 gets the ledger-based feedback, and two wrong answers in a row trigger the alternative "atoms as LEGO bricks" explanation.</p>
+<div class="shots" id="shots-b"></div>
+<table>
+<tr><th></th><th>(a) Correct</th><th>(b) M1 soil</th></tr>
+<tr><td>Path / task order</td><td>Advanced: T6, T3, T2, T4, T5</td><td>M1: T1, T2, T3, T4, T5</td></tr>
+<tr><td>Ledger intro</td><td>"prove the soil is not the source"</td><td>"test it the way van Helmont did"</td></tr>
+<tr><td>Judge verdict</td><td>correct</td><td>M1_soil, with the ledger number quoted back</td></tr>
+<tr><td>Extra scaffolding</td><td>none</td><td>Alternative explanation, model answers after 2 tries</td></tr>
+</table>
+
+<h2>D6 · AI functionality specification</h2>
+<p>Model: <code>openai/gpt-4o-mini</code> via OpenRouter (<code>OPENROUTER_MODEL</code> can change it), temperature 0.3, at most 250 tokens. Code: <code>api/agents.js</code>. Every prompt shares two blocks: a <b>learner block</b> (Ishita, 15, Olympiad aspirant, conversational, at most 60 words, no markdown) and an <b>evidence board</b> (van Helmont numbers, oven 100 → 12 g, dry-matter composition, the equation, Ruben &amp; Kamen). Agents may use only these facts.</p>
+<table>
+<tr><th>Agent</th><th>What it does</th><th>Input it receives</th><th>Output</th></tr>
+<tr><td>Dr. Leaf (Explainer)</td><td>Explains by counting atoms, building on what the learner got right</td><td>System prompt + learner's explanation</td><td>≤ 60 words of text</td></tr>
+<tr><td>Skeptic (Challenger)</td><td>Argues the strongest rival claim (a living tree is mostly water), addresses Dr. Leaf, ends with a question, never concedes</td><td>Learner's explanation + <b>Dr. Leaf's reply</b></td><td>≤ 60 words of text</td></tr>
+<tr><td>Evidence Judge</td><td>Judges the learner (not the agents) against the evidence board. Never names a winner; sends the learner to the oven.</td><td>Learner + <b>Dr. Leaf + Skeptic</b></td><td>JSON <code>{verdict: correct|partial|M1_soil|M2_water, feedback}</code></td></tr>
+<tr><td>Task judge (T5)</td><td>Scores the "convince your cousin" answer on a 3-point rubric</td><td>Learner's answer</td><td>Same JSON</td></tr>
+</table>
+<h3>Actual prompts (from <code>api/agents.js</code>)</h3>
+<pre id="prompts">(inserted from the code at build time)</pre>
+<h3>Checks before the learner sees the output</h3>
+<ol>
+<li><b>Schema check:</b> the Judge's JSON must parse, the verdict must be one of the 4 allowed values, and the feedback must be non-empty and is capped at 600 characters.</li>
+<li><b>Fact check:</b> any Explainer or Judge sentence claiming most mass comes from soil (and not negated, e.g. "you thought…") rejects the whole reply.</li>
+<li><b>Prompt hygiene:</b> learner text is truncated to 800 characters, quoted, and its double quotes neutralised.</li>
+<li><b>Human check (C5):</b> every Judge output is queued for the teacher, and the learner sees its review status.</li>
+</ol>
+<h3>Fallback when the AI fails or is wrong</h3>
+<p>On a network error, timeout (20 s per call, 30 s overall), missing key, or failed check, the app shows <b>recorded sample</b> Explainer and Skeptic replies with a visible "Recorded sample: live AI unavailable" badge. The Judge is replaced by a transparent <b>rule-based judge</b> (keyword rules for CO₂/air, soil, water and evidence numbers) that returns the same verdict format. The teacher sees "recorded sample" on these items. If the AI is wrong but passes the checks, the teacher overrides it, and the learner sees the teacher's text instead.</p>
+
+<h2>D7 · Pedagogical rationale</h2>
+<ul>
+<li><b>Predict → observe → explain:</b> the committed prediction (with confidence) makes the misconception visible to the learner herself before any teaching. The ledger then produces cognitive conflict: 74.4 kg vs 0.057 kg, drawn to scale.</li>
+<li><b>Conceptual change, not correction:</b> M1 is confronted with evidence (the ledger), and M2 is refined rather than rejected. "Water" is right for fresh mass, so the learner learns <i>when</i> each idea holds.</li>
+<li><b>Agents as scaffolds with distinct roles:</b> the Explainer models reasoning, the Challenger demands justification (argumentation, which suits an Olympiad learner who is bored by drill), and the Judge ties claims to evidence. Each agent reads the previous ones, so the discussion builds rather than repeats.</li>
+<li><b>Feedback and scaffolding:</b> each task has targeted feedback per misconception and a retry, then a model answer. Hints are on demand. Two wrong answers in a row bring a different representation (atoms as LEGO bricks), not the same explanation repeated.</li>
+<li><b>Adaptivity:</b> <i>profile</i> (the diagnostic prediction and confidence set the path and task order), <i>performance</i> (the streak rule, retries, the Olympiad-twist unlock after all first-try correct), <i>interaction</i> (hints and oven use are logged and shown to the teacher).</li>
+</ul>
+<h3>Design challenge: conflicting agent advice vs learner agency</h3>
+<p>Disagreement is <b>designed in, scoped and made into a task</b>, rather than avoided. (1) Roles are labelled and colour-coded, so the learner knows the Skeptic's job is to disagree. (2) The disagreement is about one testable question, fresh vs dry mass, where each agent is partly right. (3) The Judge is forbidden to pick a winner; it hands the decision to the learner. (4) The learner settles it with a tool (the drying oven) and two explicit verdicts, then gets feedback on <i>her</i> reasoning. (5) The teacher is the final authority over AI judgements, so conflicting AI advice never reaches the learner unreviewed as the final word. The disagreement moment is screen 5 (Disagreement card) in D5.</p>
+<h3>How C5 and L6 shaped the design</h3>
+<p><b>C5:</b> because AI judgements can be wrong, every judgement is a reviewable item with a status the learner can see. The teacher view sits next to the learner flow, and overrides replace AI text live (via <code>storage</code> events). <b>L6:</b> the hook is a puzzle, not a lecture. The Challenger agent supplies the argument she wants, a "Certain" correct prediction skips the basics for the ¹⁸O isotope twist, and the tone is "prove it" rather than "well done".</p>
+
+<h2>D8 · Evaluation plan</h2>
+<table>
+<tr><th>Outcome</th><th>Assessment item / rubric</th><th>Success criterion</th></tr>
+<tr><td>LO1 Explain</td><td>Delayed transfer item one week later: "A 2 kg pumpkin seedling grows to 50 kg. Where did the mass come from?" Rubric: names CO₂ (1), uses atom or equation reasoning (1), mentions minerals are minor (1).</td><td>≥ 75% of learners score ≥ 2/3 (pre-test prediction baseline is typically &lt; 30% "air")</td></tr>
+<tr><td>LO2 Interpret</td><td>Ledger and T2: first-try correctness; a new data table (potted maize) in the post-test</td><td>≥ 80% first-try correct on the new table</td></tr>
+<tr><td>LO3 Compare</td><td>Disagreement verdict + T4 prediction; post-test: "Which weighs more after drying: 1 kg cucumber or 1 kg wood?" with a reason</td><td>≥ 75% correct with a fresh/dry reason</td></tr>
+</table>
+<p><b>Log data collected</b> (per learner, timestamped in <code>localStorage</code>, visible in the teacher view): screen transitions, prediction and confidence, ledger tries, round-table verdict and source (AI or sample), oven maximum hours, disagreement verdicts, each answer with tries and misconception code, hints, alternative-explanation triggers, teacher approve/override, total time.</p>
+<p><b>AI quality metrics:</b> teacher override rate (target &lt; 15%), the share of AI calls falling back to samples (target &lt; 5%), and agreement between the AI Judge and the teacher on 30 sampled T5 answers (target ≥ 85%).</p>
+<p><b>Success overall:</b> the misconception rate (soil or water as the main dry-mass source) falls from the pre-test prediction to the delayed post-test by at least 50 percentage points, with a median session time of 20 minutes or less.</p>
+
+<h2>AI-use log and reflection</h2>
+<ol>
+<li><b>Claude Code (Claude Opus 5.5), one continuous session, 6:00–8:00 PM:</b> card selection, DESIGN.md, app code, agent prompts, testing on the live site, report draft. Export: <i>[attach the /export transcript]</i>.</li>
+<li><b>OpenRouter (gpt-4o-mini)</b> inside the app: the three agents and the T5 judge (prompts in D6).</li>
+</ol>
+<p><b>Reflection:</b> <i>[Write in your own words: what you asked AI to do and what you decided yourself (the card, the persona, the fresh-vs-dry disagreement), what you verified (the arithmetic: 76.7 − 2.3 = 74.4 kg; 0.057 ÷ 74.4 = 0.077%; glucose 168 of 180 g from CO₂), where AI was wrong or risky, and what you would not let AI decide (the final verdict, which goes to the teacher).]</i></p>
+<p class="muted">Identity token: 24B0354</p>
+</body>
+</html>
