@@ -275,7 +275,12 @@ const V = {
   },
 
   roundtable: () => `${steps()}<h2>Step 3 · The round-table</h2>
-    <p>Soil explains only <mark>0.08%</mark>. So where did the rest come from? <b>Tell the agents</b> in 2–3 sentences.</p>
+    <p>${{
+      M1: 'You predicted <b>soil</b>, but soil explains only <mark>0.08%</mark>. What do you think now?',
+      M2: 'You predicted <b>water</b>, and soil explains only <mark>0.08%</mark>. Is water the whole story?',
+      core: 'You predicted <b>air</b>, and soil explains only <mark>0.08%</mark>. Now show how air becomes tree.',
+      adv: 'You were <b>certain</b> it is air. Soil explains only <mark>0.08%</mark>. Now convince the agents.' }[S.path] || 'Soil explains only <mark>0.08%</mark>. So where did the rest come from?'}
+    <b>Tell the agents</b> in 2–3 sentences.</p>
     <div class="podium" aria-label="Speaking order: Dr. Leaf explains, Skeptic challenges, the Evidence Judge decides on your feedback">
       <div class="col"><span class="av big">${FACE.leaf}</span><b>Dr. Leaf</b><small>explains</small><div class="blk b1">1st</div></div>
       <div class="col"><span class="av big">${FACE.skep}</span><b>Skeptic</b><small>challenges</small><div class="blk b2">2nd</div></div>
