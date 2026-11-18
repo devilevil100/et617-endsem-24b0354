@@ -158,9 +158,9 @@ const V = {
     <input id="oven" type="range" min="0" max="48" value="${h}" style="width:100%">
     <div id="ovenout">${ovenOut(h)}</div></div>
     <p><b>1. For the FRESH (living) tree, the biggest part of its mass is…</b></p>
-    <div class="opts">${['Water', 'Matter built from CO₂'].map(o => `<label><input type="radio" name="fresh" value="${o}"> ${o}</label>`).join('')}</div>
+    <div class="opts">${['Water', 'Matter built from CO₂'].map(o => `<label><input type="radio" name="fresh" value="${o}" ${S.dis?.fresh === o ? 'checked' : ''}> ${o}</label>`).join('')}</div>
     <p><b>2. For the DRY tree, the biggest part of its mass is…</b></p>
-    <div class="opts">${['Water', 'Matter built from CO₂'].map(o => `<label><input type="radio" name="dry" value="${o}"> ${o}</label>`).join('')}</div>
+    <div class="opts">${['Water', 'Matter built from CO₂'].map(o => `<label><input type="radio" name="dry" value="${o}" ${S.dis?.dry === o ? 'checked' : ''}> ${o}</label>`).join('')}</div>
     <button data-act="verdict">Give my verdict</button><div id="dres">${S.dis?.fb ?? ''}</div>
     ${S.dis?.ok ? '<p><button data-act="go" data-arg="tasks">Next: the challenge set →</button></p>' : ''}`;
   },
