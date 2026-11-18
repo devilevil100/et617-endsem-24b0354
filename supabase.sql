@@ -1,5 +1,5 @@
 -- The Willow Mystery (24B0354): shared progress + teacher reviews.
--- Run once in the Supabase SQL Editor. Only the server (service_role key) can read or write:
+-- Run once in the Supabase SQL Editor (or psql). Only the app's server function (DATABASE_URL secret) reads or writes:
 -- RLS is on and there are no public policies, so the browser cannot reach these tables directly.
 
 create table if not exists learners (

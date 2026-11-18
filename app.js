@@ -62,7 +62,7 @@ const ICON = {
 };
 // Progress: one segment per step; the current step is the long orange pill.
 const steps = () => { const at = STEPS.indexOf(S.screen);
-  return `<nav class="progress" aria-label="Progress: step ${at + 1} of 6, ${STEP_NAMES[at]}"><span class="dots">${STEPS.map((s, i) => `<i class="${i < at ? 'done' : i === at ? 'on' : ''}"></i>`).join('')}</span><span>Step ${at + 1} of 6 · ${STEP_NAMES[at]}</span>${at > 0 ? `<button class="back" data-act="go" data-arg="${STEPS[at - 1]}"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>Back</button>` : ''}</nav>`; };
+  return `<nav class="progress" aria-label="Progress: step ${at + 1} of 6, ${STEP_NAMES[at]}"><span class="dots">${STEPS.map((s, i) => `<i class="${i < at ? 'done' : i === at ? 'on' : ''}"></i>`).join('')}</span><span>${at + 1} of 6</span>${at > 0 ? `<button class="back" data-act="go" data-arg="${STEPS[at - 1]}"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>Back</button>` : ''}</nav>`; };
 // Agent card: avatar, name, role, a fixed badge slot, the reply, and the evidence it leans on.
 const CITES = { leaf: '6CO₂ + 6H₂O → C₆H₁₂O₆ + 6O₂', skep: 'oven: 100 g fresh leaves → 12 g dry', judge: 'ledger: soil −0.057 kg vs tree +74.4 kg' };
 ICON.play = svg('<path d="M8 5v14l11-7z" fill="currentColor"/>');
@@ -224,9 +224,9 @@ const V = {
       adv: 'You are <b>certain</b> it is air. Then this should be quick: prove the soil is not the source.' }[S.path];
     const L = S.ledger;
     return `${steps()}<h2>Step 2 · Evidence lab: van Helmont's ledger</h2><p>${intro}</p>
-    <div class="card"><table><tr><th></th><th>Start</th><th>After 5 years</th><th>Change (kg)</th></tr>
-    <tr><td><b>Tree</b></td><td>2.3 kg</td><td>76.7 kg</td><td><input id="tg" type="number" step="any" inputmode="decimal" value="${L?.tg ?? ''}" aria-label="Tree change in kg"></td></tr>
-    <tr><td><b>Soil</b> (dried)</td><td>90.700 kg</td><td>90.643 kg</td><td><input id="sl" type="number" step="any" inputmode="decimal" value="${L?.sl ?? ''}" aria-label="Soil change in kg"></td></tr></table>
+    <div class="card"><table class="ledger"><caption class="muted">All masses in kg</caption><tr><th></th><th>Start</th><th>After 5 yr</th><th>Change</th></tr>
+    <tr><td><b>Tree</b></td><td>2.3</td><td>76.7</td><td><input id="tg" type="number" step="any" inputmode="decimal" value="${L?.tg ?? ''}" aria-label="Tree change in kg"></td></tr>
+    <tr><td><b>Soil</b></td><td>90.700</td><td>90.643</td><td><input id="sl" type="number" step="any" inputmode="decimal" value="${L?.sl ?? ''}" aria-label="Soil change in kg"></td></tr></table>
     <p class="muted">Change = after − start. Type how much the tree gained and how much the soil lost.</p>
     <button data-act="ledger">Check my ledger</button><div id="lres">${L?.ok ? ledgerResult() : L ? '<div class="fb no">Not quite. Subtract carefully: 76.7 − 2.3 and 90.700 − 90.643. Watch the decimals.</div>' : ''}</div></div>
     ${L?.ok ? '<button data-act="go" data-arg="roundtable">Next: explain it to the agents</button>'
@@ -244,7 +244,7 @@ const V = {
     <textarea id="expl" placeholder="I think the mass came from…">${esc(S.rt?.learner ?? '')}</textarea>
     <p><button data-act="ask" id="askb">${S.rt ? 'Ask again' : 'Send to the round-table'}</button></p></div>
     <div id="rt">${S.rt ? rtView() : ''}</div>
-    ${S.rt ? '<button data-act="go" data-arg="disagree">The agents disagree. Settle it →</button>' : ''}`,
+    ${S.rt ? '<button data-act="go" data-arg="disagree">The agents disagree. Settle it</button>' : ''}`,
 
   disagree: () => {
     const h = S.dis?.h ?? 0;
@@ -278,7 +278,7 @@ const V = {
     <div class="row"><button data-act="answer" ${done ? 'disabled' : ''}>${T.kind === 'text' && A?.value !== undefined && !done ? 'Send my revised answer' : 'Check'}</button><button class="ghost" data-act="hint" ${done || A?.hinted ? 'disabled' : ''}>Hint</button></div>
     <div id="hint">${A?.hinted ? `<p class="muted"><b>Hint:</b> ${T.hint}</p>` : ''}</div>
     <div id="tres">${A?.value !== undefined ? taskFb(id) : ''}</div></div>
-    ${done ? `<button data-act="next">${S.ti + 1 < S.order.length ? 'Next challenge →' : 'See my summary →'}</button>` : ''}`;
+    ${done ? `<button data-act="next">${S.ti + 1 < S.order.length ? 'Next challenge' : 'See my summary'}</button>` : ''}`;
   },
 
   summary: () => {
@@ -328,12 +328,13 @@ const V = {
 
 function ledgerResult() {
   return `<div class="fb ok"><b>Ledger balanced.</b> The tree gained <b>74.4 kg</b>; the soil lost <b>0.057 kg</b>. Even if every gram went into the tree, soil explains only <mark>0.08%</mark> of the gain.</div>
-  <div class="muted">Tree gain</div><div class="bar" style="width:100%"></div><div class="muted">Soil loss (to scale: almost invisible)</div><div class="bar" style="width:0.08%;min-width:2px;background:var(--skep)"></div>`;
+  <div class="muted">Tree gained 74.4 kg</div><div class="track"><div class="bar" style="width:100%"></div></div>
+  <div class="muted">Soil lost 0.057 kg, drawn to the same scale (0.08%: too thin to see)</div><div class="track"><div class="bar" style="width:0.08%"></div></div>`;
 }
 function ovenOut(h) {
   const m = 12 + 88 * Math.exp(-h / 6);
   return `<p>Mass now: <mark><b>${m.toFixed(1)} g</b></mark> · water driven off: ${(100 - m).toFixed(1)} g ${h >= 36 ? '· <b>mass has stopped changing: this is the dry mass</b>' : ''}</p>
-  <div class="bar" style="width:${m}%;background:var(--leaf)"></div>`;
+  <div class="track" aria-hidden="true"><div class="bar" style="width:${m}%"></div></div>`;
 }
 function rtView() {
   const r = S.rt; const tag = r.source === 'sample' ? ' <span class="badge sample">Recorded sample: live AI unavailable</span>' : '';
