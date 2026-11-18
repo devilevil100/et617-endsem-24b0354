@@ -274,7 +274,7 @@ const V = {
   },
 
   roundtable: () => `${steps()}<h2>Step 3 · The round-table</h2>
-    <p>The soil explains only <mark>0.08%</mark>. So where did the rest come from? Explain in 2–3 sentences. Three agents will respond, and <b>each one reads what the others said</b>.</p>
+    <p>Soil explains only <mark>0.08%</mark>. So where did the rest come from? <b>Tell the agents</b> in 2–3 sentences.</p>
     <div class="podium" aria-label="Speaking order: Dr. Leaf explains, Skeptic challenges, the Evidence Judge decides on your feedback">
       <div class="col"><span class="av big">${FACE.leaf}</span><b>Dr. Leaf</b><small>explains</small><div class="blk b1">1st</div></div>
       <div class="col"><span class="av big">${FACE.skep}</span><b>Skeptic</b><small>challenges</small><div class="blk b2">2nd</div></div>
@@ -291,7 +291,7 @@ const V = {
     return `${steps()}<h2>Step 4 · Dr. Leaf and Skeptic disagree</h2>
     <div class="versus">${plaque('leaf', 'Dr. Leaf', 'claims', '"Most of the tree\'s mass came from <mark>carbon dioxide in the air</mark>."')}
     ${plaque('skep', 'Skeptic', 'claims', '"No. Most of a living tree\'s mass is <mark>water</mark>."')}</div>
-    <p>Neither agent will tell you who is right. <b>You decide</b>, using the drying oven. Drag the slider to dry 100 g of fresh willow leaves at 70 °C.</p>
+    <p>Who is right? <b>You decide.</b> Dry 100 g of fresh leaves in the oven and watch the mass.</p>
     <div class="card"><label for="oven"><b>Hours in the oven: <span id="hv">${h}</span></b></label>
     <input id="oven" type="range" min="0" max="48" value="${h}" style="width:100%">
     <div id="ovenout">${ovenOut(h)}</div></div>
@@ -426,14 +426,14 @@ const ACT = {
   },
   async ask() {
     const text = $('expl').value.trim(); if (text.length < 10) return say('Write a sentence or two first.');
-    $('askb').disabled = true; $('rt').innerHTML = '<p class="muted">Dr. Leaf is thinking… then Skeptic reads Dr. Leaf… then the Judge reads you both… (up to 20 s)</p>';
+    $('askb').disabled = true; $('rt').innerHTML = ['leaf', 'skep', 'judge'].map((k, i) => `<div class="typing" style="animation-delay:${i * .2}s"><span class="av">${FACE[k]}</span><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span></div>`).join('') + '<p class="muted">The agents are reading each other…</p>';
     let r;
     try { const d = await callAgents({ mode: 'roundtable', text, path: S.path, prev: S.rt?.judge, name: S.name }); r = { explainer: d.explainer, challenger: d.challenger, judge: d.judge || ruleJudge(text), source: d.judge ? 'ai' : 'rules' }; if (!d.judge) log('judge_check_failed', d.judgeNote); }
     catch (e) { log('ai_fail', String(e)); r = { ...SAMPLE_RT, challenger: SAMPLE_RT.challenger.replace('Ishita', S.name || 'scientist'), judge: ruleJudge(text), source: 'sample' }; }
     const item = addFb('Round-table', text, r.judge.feedback, r.source, r.judge.verdict,
       { flag: r.source === 'ai' && clash(r.judge.verdict, ruleJudge(text).verdict), agents: { explainer: r.explainer, challenger: r.challenger } });
     if (r.judge.verdict === 'M1_soil') log('misconception', 'M1'); if (r.judge.verdict === 'M2_water') log('misconception', 'M2');
-    S.rt = { ...r, learner: text, fbId: item.id }; log('roundtable', { verdict: r.judge.verdict, source: r.source }); render();
+    S.rt = { ...r, learner: text, fbId: item.id }; log('roundtable', { verdict: r.judge.verdict, source: r.source }); render(); $('rt')?.classList.add('fresh');
   },
   verdict() {
     const fresh = picked('fresh'), dry = picked('dry'); if (!fresh || !dry) return say('Answer both questions.');
@@ -507,11 +507,16 @@ addEventListener('hashchange', () => { render(); if (location.hash === '#teacher
 document.addEventListener('change', e => { if (e.target.id === 'who') { T.cur = e.target.value; render(); } });
 setInterval(() => (location.hash === '#teacher' ? loadLearners() : pullReviews()), 15000);
 
+let lastPts = null;
 function render() {
   const view = location.hash === '#teacher' ? 'teacher' : location.hash === '#about' ? 'about' : S.screen;
   $('app').innerHTML = (view === 'teacher' || view === 'about' ? '' : topbar()) + (V[view] || V.welcome)();
   const here = view === 'teacher' ? '#teacher' : view === 'about' ? '#about' : '#';
   document.querySelectorAll('.dock a').forEach(a => a.classList.toggle('on', a.getAttribute('href') === here));
+  // Points reward: the chip bounces and "+N" floats up when points go up.
+  const pts = points(), chip = document.querySelector('.topbar .chip:last-child');
+  if (chip && lastPts !== null && pts > lastPts) { chip.classList.add('bump'); chip.insertAdjacentHTML('beforeend', `<span class="plus">+${pts - lastPts}</span>`); }
+  lastPts = pts;
 }
 render();
 if (location.hash === '#teacher') loadLearners(); else pullReviews();
