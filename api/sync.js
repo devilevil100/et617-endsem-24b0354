@@ -8,6 +8,9 @@ module.exports = async (req, res) => {
   if (!pool) return res.status(503).json({ ok: false, error: 'database not configured' });
   const q = req.method === 'GET' ? req.query : (req.body || {});
   const id = String(q.id || '').slice(0, 64);
+  // Reading the class or reviewing AI feedback is teacher-only: a code held as a Vercel secret.
+  if ((q.action === 'learners' || q.action === 'review') && process.env.TEACHER_CODE && q.code !== process.env.TEACHER_CODE)
+    return res.status(401).json({ ok: false, error: 'teacher code required' });
   try {
     if (q.action === 'push' && id && q.state) {          // learner device saves its progress
       await pool.query(`insert into learners (id, name, state, updated_at) values ($1, $2, $3, now())

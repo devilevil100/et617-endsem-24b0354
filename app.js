@@ -23,11 +23,15 @@ async function pullReviews() {
   } catch {}
 }
 // Teacher device: the class list from the database (falls back to this device's learner).
-const T = { learners: null, cur: null, err: false };
+const T = { learners: null, cur: null, err: false, bad: false, code: (() => { try { return sessionStorage.getItem('tcode') || ''; } catch { return ''; } })() };
 async function loadLearners() {
-  try { const d = await (await fetch('/api/sync?action=learners')).json(); if (!d.ok) throw 0; T.learners = d.learners; T.err = false;
+  if (!T.code) { if (location.hash === '#teacher') render(); return; }
+  try {
+    const r = await fetch(`/api/sync?action=learners&code=${encodeURIComponent(T.code)}`);
+    if (r.status === 401) { T.bad = true; T.code = ''; try { sessionStorage.removeItem('tcode'); } catch {} }
+    const d = await r.json(); if (!d.ok) throw 0; T.learners = d.learners; T.err = false;
     if (!T.learners.some(l => l.id === T.cur)) T.cur = T.learners[0]?.id ?? null; }
-  catch { T.err = true; T.learners = null; }
+  catch { T.err = !T.bad; T.learners = null; }
   if (location.hash === '#teacher' && !typing()) render();
 }
 async function review(fbId, status, text) {
@@ -35,7 +39,7 @@ async function review(fbId, status, text) {
   for (const st of new Set([L, L.id === S.id ? S : L])) { const f = st.fb.find(x => x.id === fbId); if (f) { f.status = status; f.teacherText = text; } }
   if (L.id === S.id) log('teacher_' + status, fbId);
   render();
-  try { await post({ action: 'review', id: L.id, fb_id: fbId, status, teacher_text: text }); } catch {}
+  try { await post({ action: 'review', id: L.id, fb_id: fbId, status, teacher_text: text, code: T.code }); } catch {}
 }
 function log(ev, data) { S.log.push({ t: Date.now(), ev, data }); save(); }
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -286,7 +290,13 @@ const V = {
     S.order.forEach(id => (lo[TASKS[id].lo] ||= []).push(!!S.ans[id]?.firstOk));
     const name = { LO1: 'Explain: most dry mass comes from CO₂', LO2: 'Interpret: van Helmont\'s data rules out soil', LO3: 'Compare: fresh mass vs dry mass' };
     const mis = S.log.filter(l => l.ev === 'misconception').map(l => l.data);
-    return `${steps()}<h2>Step 6 · What you figured out, ${esc(S.name || 'scientist')}</h2>
+    const after = S.post ? `<div class="card"><h3 style="margin-top:0">Before and after</h3><table class="facts"><tr><th>Before</th><td>${esc(S.predict?.choice)} (${esc(S.predict?.conf)})</td></tr><tr><th>Now (dry mass)</th><td><b>${esc(S.post.choice)}</b> (${esc(S.post.conf)})</td></tr></table>
+      <p>${S.post.choice.startsWith('Air') ? (S.predict?.choice.startsWith('Air') ? 'You held the right idea, and now you have the evidence behind it.' : 'You changed your mind because of the evidence. That is exactly how science works.') : 'Not yet. Look back at the oven: the 12 g left after drying is built from which gas?'}</p></div>`
+      : `<div class="card"><h3 style="margin-top:0">One last question</h3><p>Now that you have weighed the evidence: where did most of a willow's <b>dry</b> mass come from?</p>
+      <div class="opts">${['Soil', 'Water', 'Air (carbon dioxide)', 'Sunlight'].map(o => `<label><input type="radio" name="post" value="${o}"> ${o}</label>`).join('')}</div>
+      <div class="opts seg">${['Guessing', 'Fairly sure', 'Certain'].map(o => `<label><input type="radio" name="pc" value="${o}"> ${o}</label>`).join('')}</div>
+      <button data-act="post">Lock in my final answer</button></div>`;
+    return `${steps()}<h2>Step 6 · What you figured out, ${esc(S.name || 'scientist')}</h2>${after}
     <div class="card"><table><tr><th>Learning outcome</th><th>First-try correct</th></tr>
     ${Object.keys(name).map(k => `<tr><td>${name[k]}</td><td>${lo[k].filter(Boolean).length} / ${lo[k].length}</td></tr>`).join('')}</table></div>
     <div class="card"><b>Your journey</b><ul>
@@ -300,14 +310,24 @@ const V = {
   },
 
   teacher: () => {
+    if (!T.code) return `<div class="arch"><h1>Teacher view</h1></div><div class="card"><label for="tcode"><b>Teacher code</b></label>
+      <input id="tcode" type="password" autocomplete="off" style="margin-top:8px"><p class="muted">${T.bad ? '<b>That code did not work.</b> ' : ''}Only the coach can see learners' answers and review the AI.</p>
+      <button data-act="tlogin">Open teacher view</button></div>`;
     const L = T.learners?.find(l => l.id === T.cur)?.state || S;
+    const all = T.learners?.map(l => l.state) || [], air = c => c?.startsWith('Air');
+    const glance = all.length ? `<div class="card"><h3 style="margin-top:0">Class at a glance</h3><table class="facts">
+      <tr><th>Learners</th><td>${all.length}</td></tr>
+      <tr><th>Started with soil / water idea</th><td>${all.filter(x => x.path === 'M1').length} / ${all.filter(x => x.path === 'M2').length}</td></tr>
+      <tr><th>Dry mass from air, at the end</th><td>${all.filter(x => air(x.post?.choice)).length} of ${all.filter(x => x.post).length} who finished</td></tr>
+      <tr><th>AI items waiting</th><td>${all.reduce((n, x) => n + (x.fb || []).filter(f => f.status === 'pending').length, 0)} (${all.reduce((n, x) => n + (x.fb || []).filter(f => f.status === 'pending' && f.flag).length, 0)} flagged)</td></tr></table></div>` : '';
     const src = T.learners ? `Shared database · ${T.learners.length} learner${T.learners.length === 1 ? '' : 's'}` : T.err ? 'This device only (database unavailable)' : 'Loading the class…';
     return `<div class="arch"><h1>Teacher view</h1></div><p class="muted">Mr. D'Souza · Olympiad batch. Approve or override every AI judgement. The learner's app picks up your decision within 15 seconds, on any device.</p>
     <div class="card"><label for="who"><b>Learner</b></label> <span class="badge">${esc(src)}</span>
     ${T.learners?.length ? `<select id="who" style="margin-top:8px">${T.learners.map(l => `<option value="${esc(l.id)}" ${l.id === T.cur ? 'selected' : ''}>${esc(l.name || 'Unnamed')} · ${esc(l.state?.screen ?? '')} · ${new Date(l.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</option>`).join('')}</select>` : ''}</div>
-    <div class="card"><h3 style="margin-top:0">${esc(L.name || 'Learner')} <span class="badge">now on: ${esc(STEP_NAMES[STEPS.indexOf(L.screen)] ?? 'Welcome')}</span></h3>
+    ${glance}<div class="card"><h3 style="margin-top:0">${esc(L.name || 'Learner')} <span class="badge">now on: ${esc(STEP_NAMES[STEPS.indexOf(L.screen)] ?? 'Welcome')}</span></h3>
     <table class="facts">
       <tr><th>Prediction</th><td><b>${esc(L.predict?.choice ?? 'not yet')}</b>${L.predict ? ` (${esc(L.predict.conf)})` : ''}${L.predict?.why ? `<br><span class="muted">"${esc(L.predict.why)}"</span>` : ''}</td></tr>
+      <tr><th>After (dry mass)</th><td>${L.post ? `<b>${esc(L.post.choice)}</b> (${esc(L.post.conf)})` : '-'}</td></tr>
       <tr><th>Path</th><td>${esc({ M1: 'Soil misconception', M2: 'Water misconception', core: 'Core', adv: 'Olympiad (advanced)' }[L.path] ?? '-')}</td></tr>
       <tr><th>Ledger</th><td>${L.ledger ? `${L.ledger.ok ? 'correct' : 'not yet'} · ${L.ledger.tries} ${L.ledger.tries === 1 ? 'try' : 'tries'}` : '-'}</td></tr>
       <tr><th>Disagreement</th><td>${L.dis?.tries ? `${L.dis.ok ? 'resolved' : 'not resolved'} · oven used up to ${L.dis.maxH ?? 0} h` : '-'}</td></tr>
@@ -426,6 +446,8 @@ const ACT = {
     if (S.ti === S.order.length && S.path === 'core' && !S.order.includes('t6') && S.order.every(id => S.ans[id]?.firstOk || TASKS[id].kind === 'text')) { S.order = [...S.order, 't6']; log('unlock', 't6'); }
     save(); S.ti < S.order.length ? render() : go('summary');
   },
+  post() { const choice = picked('post'), conf = picked('pc'); if (!choice || !conf) return say('Pick an answer and how sure you are.'); S.post = { choice, conf }; log('post', S.post); render(); },
+  tlogin() { const c = $('tcode').value.trim(); if (!c) return say('Enter the teacher code.'); T.code = c; T.bad = false; try { sessionStorage.setItem('tcode', c); } catch {} T.learners = null; render(); loadLearners(); },
   approve(id) { review(id, 'approved', ''); },
   override(id) { const t = $('ov' + id).value.trim(); if (!t) return say('Write your feedback first.'); review(id, 'overridden', t); },
   reset() { if (confirm('Erase all progress on this device?')) { S = blank(); save(); location.hash = ''; render(); } }

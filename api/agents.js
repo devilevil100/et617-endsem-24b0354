@@ -35,8 +35,13 @@ function checkJudge(raw) {
   return { verdict: j.verdict, feedback: j.feedback.trim().slice(0, 600) };
 }
 
+// ponytail: per-instance memory limit (30 calls / 10 min per IP); a shared store if abuse matters.
+const hits = new Map();
+const limited = ip => { const now = Date.now(), w = (hits.get(ip) || []).filter(t => now - t < 600000); w.push(now); hits.set(ip, w); return w.length > 30; };
+
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ ok: false });
+  if (limited(String(req.headers['x-forwarded-for'] || 'unknown').split(',')[0])) return res.status(429).json({ ok: false, error: 'too many requests' });
   if (!process.env.OPENROUTER_API_KEY) return res.status(503).json({ ok: false, error: 'AI key not configured' });
   const { mode, text = '', prev } = req.body || {};
   const learner = String(text).slice(0, 800).replace(/"/g, "'");
