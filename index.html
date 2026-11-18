@@ -3,10 +3,55 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ET 617 End-Sem · 24B0354</title>
+<title>The Willow Mystery · 24B0354</title>
+<style>
+  :root { --ink:#1d2321; --quiet:#5b6662; --line:#d5dcd8; --bg:#f7f8f4; --card:#fff; --leaf:#2f7d4f; --leaf-t:#e3f1e8; --skep:#a24d1f; --skep-t:#f8e9df; --judge:#3b4fa0; --judge-t:#e6e9f7; --warn:#8a5a00; --warn-t:#fdf1d6; }
+  * { box-sizing: border-box; }
+  body { margin:0; font:17px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; color:var(--ink); background:var(--bg); }
+  main { max-width: 760px; margin: 0 auto; padding: 16px 16px 96px; }
+  h1 { font-size: 1.7rem; line-height:1.2; margin:.4em 0 .3em; }
+  h2 { font-size: 1.3rem; margin:.2em 0 .5em; }
+  .lead { font-size: 1.08rem; }
+  mark { background: #fff1a8; padding: 0 .2em; border-radius: 3px; }
+  .card { background: var(--card); border:1px solid var(--line); border-radius: 12px; padding: 16px; margin: 14px 0; }
+  .steps { display:flex; gap:6px; flex-wrap:wrap; font-size:.8rem; color:var(--quiet); margin: 4px 0 10px; }
+  .steps span { padding: 2px 8px; border-radius: 99px; border:1px solid var(--line); }
+  .steps .on { background: var(--ink); color:#fff; border-color: var(--ink); }
+  button, .btn { font: inherit; font-weight: 600; padding: 12px 18px; border-radius: 10px; border: 2px solid var(--ink); background: var(--ink); color:#fff; cursor:pointer; min-height: 48px; }
+  button.ghost { background: transparent; color: var(--ink); }
+  button:disabled { opacity:.45; cursor:not-allowed; }
+  .opts { display:grid; gap:8px; margin: 8px 0 14px; }
+  .opts label { display:flex; gap:10px; align-items:center; padding: 12px 14px; border:2px solid var(--line); border-radius:10px; background:#fff; cursor:pointer; }
+  .opts label:has(input:checked) { border-color: var(--ink); background: #eef1ee; }
+  textarea, input[type=text], input[type=number], select { font: inherit; width:100%; padding: 10px 12px; border:2px solid var(--line); border-radius: 10px; background:#fff; }
+  textarea { min-height: 90px; }
+  table { border-collapse: collapse; width:100%; }
+  th, td { text-align:left; padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  .agent { border-radius: 12px; padding: 12px 14px; margin: 10px 0; border-left: 5px solid; }
+  .agent b { display:block; font-size:.9rem; }
+  .agent small { color: var(--quiet); }
+  .leaf { background: var(--leaf-t); border-color: var(--leaf); }
+  .skep { background: var(--skep-t); border-color: var(--skep); }
+  .judge { background: var(--judge-t); border-color: var(--judge); }
+  .fb { padding: 12px 14px; border-radius: 10px; margin: 10px 0; }
+  .fb.ok { background: var(--leaf-t); }
+  .fb.no { background: var(--warn-t); }
+  .badge { display:inline-block; font-size:.75rem; font-weight:600; padding: 2px 8px; border-radius:99px; background:#eceee9; color: var(--quiet); }
+  .badge.sample { background: var(--warn-t); color: var(--warn); }
+  .badge.approved { background: var(--leaf-t); color: var(--leaf); }
+  .badge.overridden { background: var(--judge-t); color: var(--judge); }
+  .versus { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 520px) { .versus { grid-template-columns: 1fr; } }
+  .bar { height: 22px; border-radius: 6px; background: var(--leaf); }
+  .row { display:flex; gap:10px; flex-wrap: wrap; align-items:center; }
+  .muted { color: var(--quiet); font-size: .92rem; }
+  footer { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top:1px solid var(--line); padding: 8px 16px; font-size: .85rem; display:flex; justify-content: space-between; gap: 10px; }
+  footer a { color: var(--ink); }
+</style>
 </head>
 <body>
-<h1>ET 617 End-Sem app: coming up</h1>
-<footer>24B0354</footer>
+<main id="app"></main>
+<footer><span>ET 617 End-Sem · <b>24B0354</b></span><span><a href="#">Learner</a> · <a href="#teacher">Teacher view</a> · <a href="#about">About</a></span></footer>
+<script src="app.js"></script>
 </body>
 </html>
