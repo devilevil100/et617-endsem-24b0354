@@ -217,6 +217,27 @@ const carousel = (d = 0) => { const at = k => (CI + k + 3) % 3;
   <div class="center ${d > 0 ? 'in-right' : d < 0 ? 'in-left' : ''}" aria-live="polite">${SLIDES()[CI]}</div>
   <div class="side right" style="background:${SLIDE_BG[at(1)]}" data-act="turn" data-arg="1" aria-hidden="true"></div>`; };
 function paint(d) { $('car').innerHTML = carousel(d); document.querySelectorAll('.pager .dot').forEach((x, k) => x.classList.toggle('on', k === CI)); }
+// Teacher queue: Pending first, one-tap approve, bulk approve, and edit-in-place starting from the AI's text.
+function queue(L) {
+  const fb = L.fb || [], pending = fb.filter(f => f.status === 'pending');
+  const list = [...fb].filter(f => T.filter === 'all' || f.status === 'pending')
+    .sort((a, b) => (b.flag && b.status === 'pending') - (a.flag && a.status === 'pending'));
+  const badges = f => `<span class="badge ${f.status}">${f.status}</span>${f.flag ? '<span class="badge sample">flagged: AI and rule check disagree</span>' : ''}${f.source === 'sample' ? '<span class="badge sample">recorded sample</span>' : f.source === 'rules' ? '<span class="badge sample">rule-based judge</span>' : ''}<span class="badge">verdict: ${esc(f.verdict)}</span>`;
+  const item = f => `<div class="card qi"><div class="row"><b>${esc(f.where)}</b>${badges(f)}</div>
+    <p class="muted"><b>Learner:</b> "${esc(f.learner)}"</p>
+    ${T.edit === f.id
+      ? `<label for="ov${f.id}" class="muted"><b>Your version</b> (starts from the AI's text)</label><textarea id="ov${f.id}">${esc(f.teacherText || f.text)}</textarea>
+         <div class="row qa"><button data-act="override" data-arg="${f.id}">Save my version</button><button class="ghost" data-act="tedit" data-arg="">Cancel</button></div>`
+      : `<p><b>${f.status === 'overridden' ? 'Your version' : 'AI said'}:</b> ${esc(f.status === 'overridden' ? f.teacherText : f.text)}</p>
+         <div class="row qa">${f.status === 'pending' ? `<button data-act="approve" data-arg="${f.id}">Approve</button>` : ''}<button class="ghost" data-act="tedit" data-arg="${f.id}">${f.status === 'pending' ? 'Edit' : 'Change'}</button></div>`}
+    ${f.agents ? `<details><summary>What Dr. Leaf and Skeptic told the learner</summary><p><b>Dr. Leaf:</b> ${esc(f.agents.explainer)}</p><p><b>Skeptic:</b> ${esc(f.agents.challenger)}</p></details>` : ''}</div>`;
+  return `<h2>AI feedback queue</h2>
+    <div class="row qbar"><div class="tabs" role="tablist">
+      <button role="tab" class="${T.filter !== 'all' ? 'on' : ''}" data-act="tfilter" data-arg="pending">Pending (${pending.length})</button>
+      <button role="tab" class="${T.filter === 'all' ? 'on' : ''}" data-act="tfilter" data-arg="all">All (${fb.length})</button></div>
+      <button class="ghost" data-act="approveAll" ${pending.length ? '' : 'disabled'}>Approve all pending</button></div>
+    ${list.map(item).join('') || `<p class="muted">${T.filter === 'all' ? 'No AI feedback yet.' : 'Nothing waiting. All AI feedback is reviewed.'}</p>`}`;
+}
 // ---------- views ----------
 const V = {
   welcome: () => `<label class="namebar"><span class="sr">Your first name</span>${ICON.user}<input id="name" type="text" value="${esc(S.name)}" placeholder="Type your first name" autocomplete="given-name"></label>
@@ -350,11 +371,7 @@ const V = {
     </table></div>
     <div class="card"><table><tr><th>Task</th><th>Answer</th><th>Tries</th><th>Result</th></tr>
     ${Object.keys(TASKS).filter(id => L.ans[id]?.value !== undefined).map(id => { const a = L.ans[id]; return `<tr><td>${id.toUpperCase()}</td><td>${esc(Array.isArray(a.value) ? a.value.join(', ') : a.value)}</td><td>${a.tries}</td><td>${a.ok ? 'correct' : 'wrong'}${a.mis ? ' ' + a.mis : ''}</td></tr>`; }).join('') || '<tr><td colspan="4" class="muted">No answers yet.</td></tr>'}</table></div>
-    <h2>AI feedback queue</h2><p class="muted">Flagged items (the AI and the rule check disagree) come first.</p>${[...L.fb].sort((a, b) => (b.flag && b.status === 'pending') - (a.flag && a.status === 'pending')).map(f => `<div class="card"><div class="row"><b>${esc(f.where)}</b><span class="badge ${f.status}">${f.status}</span>${f.flag ? '<span class="badge sample">flagged: AI and rule check disagree</span>' : ''}${f.source === 'sample' ? '<span class="badge sample">recorded sample</span>' : f.source === 'rules' ? '<span class="badge sample">rule-based judge (AI failed check)</span>' : '<span class="badge">live AI</span>'}<span class="badge">verdict: ${esc(f.verdict)}</span></div>
-      <p class="muted">Learner wrote: "${esc(f.learner)}"</p><p>AI Judge said: ${esc(f.text)}</p>
-      ${f.agents ? `<details><summary>What Dr. Leaf and Skeptic told the learner</summary><p><b>Dr. Leaf:</b> ${esc(f.agents.explainer)}</p><p><b>Skeptic:</b> ${esc(f.agents.challenger)}</p></details>` : ''}
-      <textarea id="ov${f.id}" placeholder="Write your own feedback to replace the AI's…">${esc(f.teacherText)}</textarea>
-      <div class="row" style="margin-top:8px"><button data-act="approve" data-arg="${f.id}">Approve AI feedback</button><button class="ghost" data-act="override" data-arg="${f.id}">Override with my text</button></div></div>`).join('') || '<p class="muted">No AI feedback yet.</p>'}`; },
+    ${queue(L)}`; },
 
   about: () => `<div class="arch"><h1>About</h1></div><div class="card">
     <p><b>The Willow Mystery</b>: a multi-agent learning environment for <i>"Where does a plant's mass come from?"</i></p>
@@ -466,7 +483,10 @@ const ACT = {
   post() { const choice = picked('post'), conf = picked('pc'); if (!choice || !conf) return say('Pick an answer and how sure you are.'); S.post = { choice, conf }; log('post', S.post); render(); },
   tlogin() { const c = $('tcode').value.trim(); if (!c) return say('Enter the teacher code.'); T.code = c; T.bad = false; try { sessionStorage.setItem('tcode', c); } catch {} T.learners = null; render(); loadLearners(); },
   approve(id) { review(id, 'approved', ''); },
-  override(id) { const t = $('ov' + id).value.trim(); if (!t) return say('Write your feedback first.'); review(id, 'overridden', t); },
+  override(id) { const t = $('ov' + id).value.trim(); if (!t) return say('Write your feedback first.'); T.edit = null; review(id, 'overridden', t); },
+  tedit(id) { T.edit = id || null; render(); if (id) $('ov' + id)?.focus(); },
+  tfilter(f) { T.filter = f; render(); },
+  approveAll() { const L = T.learners?.find(l => l.id === T.cur)?.state || S; (L.fb || []).filter(f => f.status === 'pending').forEach(f => review(f.id, 'approved', '')); },
   reset() { if (confirm('Erase all progress on this device?')) { S = blank(); save(); location.hash = ''; render(); } }
 };
 
