@@ -432,7 +432,7 @@ const ACT = {
   },
   async ask() {
     const text = $('expl').value.trim(); if (text.length < 10) return say('Write a sentence or two first.');
-    $('askb').disabled = true; $('rt').innerHTML = ['leaf', 'skep', 'judge'].map((k, i) => `<div class="typing" style="animation-delay:${i * .2}s"><span class="av">${FACE[k]}</span><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span></div>`).join('') + '<p class="muted">The agents are reading each other…</p>';
+    $('askb').disabled = true; $('rt').innerHTML = ['leaf', 'skep', 'judge'].map((k, i) => `<div class="typing" style="animation-delay:${i * .2}s"><span class="av">${FACE[k]}</span><span class="tdots" aria-hidden="true"><i></i><i></i><i></i></span></div>`).join('') + '<p class="muted">The agents are reading each other…</p>';
     let r;
     try { const d = await callAgents({ mode: 'roundtable', text, path: S.path, prev: S.rt?.judge, name: S.name }); r = { explainer: d.explainer, challenger: d.challenger, judge: d.judge || ruleJudge(text), source: d.judge ? 'ai' : 'rules' }; if (!d.judge) log('judge_check_failed', d.judgeNote); }
     catch (e) { log('ai_fail', String(e)); r = { ...SAMPLE_RT, challenger: SAMPLE_RT.challenger.replace('Ishita', S.name || 'scientist'), judge: ruleJudge(text), source: 'sample' }; }
