@@ -116,7 +116,7 @@
 </table>
 
 <h2>D6 · AI functionality specification</h2>
-<p>Model: <code>openai/gpt-4o-mini</code> via OpenRouter (<code>OPENROUTER_MODEL</code> can change it), temperature 0.3, at most 250 tokens. Code: <code>api/agents.js</code>. Every prompt shares two blocks: a <b>learner block</b> (Ishita, 15, Olympiad aspirant, conversational, at most 60 words, no markdown) and an <b>evidence board</b> (van Helmont numbers, oven 100 → 12 g, dry-matter composition, the equation, Ruben &amp; Kamen). Agents may use only these facts.</p>
+<p>Model: <code>openai/gpt-4o-mini</code> via OpenRouter (<code>OPENROUTER_MODEL</code> can change it), temperature 0.3, at most 250 tokens. Code: <code>api/agents.js</code>. Every prompt shares two blocks: a <b>learner block</b> (Ishita, 15, Olympiad aspirant, conversational, at most 60 words, no markdown) and an <b>evidence board</b> (van Helmont numbers, oven 100 → 12 g, dry-matter composition, the equation, Ruben &amp; Kamen). Agents may use only these facts. <b>Agent memory:</b> on the next turn (asking the round-table again, or the T5 challenge), the Judge's earlier verdict is passed to every agent. They target the diagnosed gap and say whether the learner has moved past it; in scenario (a) the T5 Judge wrote "You've moved past the gap!".</p>
 <table>
 <tr><th>Agent</th><th>What it does</th><th>Input it receives</th><th>Output</th></tr>
 <tr><td>Dr. Leaf (Explainer)</td><td>Explains by counting atoms, building on what the learner got right</td><td>System prompt + learner's explanation</td><td>≤ 60 words of text</td></tr>
