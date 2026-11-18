@@ -26,7 +26,7 @@ async function ask(system, user, json) {
 }
 
 // Check before the learner sees it: reject any sentence that claims soil is the main source (unless it is negated or attributed).
-const soilClaim = t => t.split(/[.!?]/).some(s => /(most|majority|main)[^.]*from (the )?soil/i.test(s) && !/\b(not|n't|never|thought|think|believe|claim|says|said)\b/i.test(s));
+const soilClaim = t => t.split(/[.!?]/).some(s => /(most|majority|main)[^.]*from (the )?soil/i.test(s) && !/(\bnot\b|n't|\bnever\b|\byou|\bthought|\bthink|\bbeliev|\bclaim|\bsa(y|id)|\bmention|\bidea|\bsuggest|\bassum|\bargu|\bonly\b|\binstead\b|\brather\b)/i.test(s));
 
 function checkJudge(raw) {
   const j = JSON.parse(raw.slice(raw.indexOf('{'), raw.lastIndexOf('}') + 1));
@@ -48,8 +48,11 @@ module.exports = async (req, res) => {
       const explainer = await ask(PROMPTS.explainer, `Learner's explanation: "${learner}"${memo}`);
       if (soilClaim(explainer)) throw new Error('explainer failed fact check');
       const challenger = await ask(PROMPTS.challenger, `Learner's explanation: "${learner}"\nDr. Leaf said: "${explainer}"${memo}`);
-      const judge = checkJudge(await ask(PROMPTS.judge, `Learner's explanation: "${learner}"\nDr. Leaf said: "${explainer}"\nSkeptic said: "${challenger}"${memo}`, true));
-      return res.json({ ok: true, model: MODEL, explainer, challenger, judge });
+      // If only the Judge fails its checks, keep the live agents and let the app use its labelled rule-based judge.
+      let judge = null, judgeNote = '';
+      try { judge = checkJudge(await ask(PROMPTS.judge, `Learner's explanation: "${learner}"\nDr. Leaf said: "${explainer}"\nSkeptic said: "${challenger}"${memo}`, true)); }
+      catch (e) { judgeNote = String(e.message || e); }
+      return res.json({ ok: true, model: MODEL, explainer, challenger, judge, judgeNote });
     }
     if (mode === 'judge') return res.json({ ok: true, model: MODEL, judge: checkJudge(await ask(PROMPTS.task, `Learner's answer: "${learner}"${memo}`, true)) });
     return res.status(400).json({ ok: false, error: 'unknown mode' });

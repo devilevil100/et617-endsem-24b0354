@@ -82,7 +82,7 @@ function fbView(item) {
   const badge = item.status === 'approved' ? '<span class="badge approved">Approved by your teacher</span>'
     : item.status === 'overridden' ? '<span class="badge overridden">Your teacher rewrote this feedback</span>'
     : '<span class="badge">Waiting for teacher review</span>';
-  const src = (item.source === 'sample' ? ' <span class="badge sample">Recorded sample: live AI unavailable</span>' : '')
+  const src = (item.source === 'sample' ? ' <span class="badge sample">Recorded sample: live AI unavailable</span>' : item.source === 'rules' ? ' <span class="badge sample">AI Judge reply failed a check: rule-based feedback</span>' : '')
     + (item.flag && item.status === 'pending' ? ' <span class="badge sample">Your teacher will double-check this one</span>' : '');
   return plaque('judge', 'Evidence Judge', 'checks claims against evidence', esc(shown), badge + src);
 }
@@ -276,7 +276,7 @@ const V = {
     Ledger: ${S.ledger ? (S.ledger.ok ? 'correct' : 'in progress') + ` (${S.ledger.tries} tries)` : '-'} · Disagreement: ${S.dis ? (S.dis.ok ? 'resolved' : 'trying') + ` (oven max ${S.dis.maxH ?? 0} h)` : '-'} · Hints: ${S.hints}</div>
     <div class="card"><table><tr><th>Task</th><th>Answer</th><th>Tries</th><th>Result</th></tr>
     ${Object.keys(TASKS).filter(id => S.ans[id]?.value !== undefined).map(id => { const a = S.ans[id]; return `<tr><td>${id.toUpperCase()}</td><td>${esc(Array.isArray(a.value) ? a.value.join(', ') : a.value)}</td><td>${a.tries}</td><td>${a.ok ? 'correct' : 'wrong'}${a.mis ? ' ' + a.mis : ''}</td></tr>`; }).join('') || '<tr><td colspan="4" class="muted">No answers yet.</td></tr>'}</table></div>
-    <h2>AI feedback queue</h2><p class="muted">Flagged items (the AI and the rule check disagree) come first.</p>${[...S.fb].sort((a, b) => (b.flag && b.status === 'pending') - (a.flag && a.status === 'pending')).map(f => `<div class="card"><div class="row"><b>${esc(f.where)}</b><span class="badge ${f.status}">${f.status}</span>${f.flag ? '<span class="badge sample">flagged: AI and rule check disagree</span>' : ''}${f.source === 'sample' ? '<span class="badge sample">recorded sample</span>' : '<span class="badge">live AI</span>'}<span class="badge">verdict: ${esc(f.verdict)}</span></div>
+    <h2>AI feedback queue</h2><p class="muted">Flagged items (the AI and the rule check disagree) come first.</p>${[...S.fb].sort((a, b) => (b.flag && b.status === 'pending') - (a.flag && a.status === 'pending')).map(f => `<div class="card"><div class="row"><b>${esc(f.where)}</b><span class="badge ${f.status}">${f.status}</span>${f.flag ? '<span class="badge sample">flagged: AI and rule check disagree</span>' : ''}${f.source === 'sample' ? '<span class="badge sample">recorded sample</span>' : f.source === 'rules' ? '<span class="badge sample">rule-based judge (AI failed check)</span>' : '<span class="badge">live AI</span>'}<span class="badge">verdict: ${esc(f.verdict)}</span></div>
       <p class="muted">Learner wrote: "${esc(f.learner)}"</p><p>AI Judge said: ${esc(f.text)}</p>
       ${f.agents ? `<details><summary>What Dr. Leaf and Skeptic told the learner</summary><p><b>Dr. Leaf:</b> ${esc(f.agents.explainer)}</p><p><b>Skeptic:</b> ${esc(f.agents.challenger)}</p></details>` : ''}
       <textarea id="ov${f.id}" placeholder="Write your own feedback to replace the AI's…">${esc(f.teacherText)}</textarea>
@@ -336,7 +336,7 @@ const ACT = {
     const text = $('expl').value.trim(); if (text.length < 10) return say('Write a sentence or two first.');
     $('askb').disabled = true; $('rt').innerHTML = '<p class="muted">Dr. Leaf is thinking… then Skeptic reads Dr. Leaf… then the Judge reads you both… (up to 20 s)</p>';
     let r;
-    try { const d = await callAgents({ mode: 'roundtable', text, path: S.path, prev: S.rt?.judge }); r = { explainer: d.explainer, challenger: d.challenger, judge: d.judge, source: 'ai' }; }
+    try { const d = await callAgents({ mode: 'roundtable', text, path: S.path, prev: S.rt?.judge }); r = { explainer: d.explainer, challenger: d.challenger, judge: d.judge || ruleJudge(text), source: d.judge ? 'ai' : 'rules' }; if (!d.judge) log('judge_check_failed', d.judgeNote); }
     catch (e) { log('ai_fail', String(e)); r = { ...SAMPLE_RT, judge: ruleJudge(text), source: 'sample' }; }
     const item = addFb('Round-table', text, r.judge.feedback, r.source, r.judge.verdict,
       { flag: r.source === 'ai' && clash(r.judge.verdict, ruleJudge(text).verdict), agents: { explainer: r.explainer, challenger: r.challenger } });
