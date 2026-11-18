@@ -1,12 +1,42 @@
 // The Willow Mystery: ET 617 End-Sem, 24B0354
 // Learner flow: welcome → predict → ledger → roundtable → disagree → tasks → summary. Plus #teacher and #about.
 const KEY = 'willow-24b0354';
-const blank = () => ({ screen: 'welcome', name: '', path: null, predict: null, ledger: null, rt: null, dis: null,
+const blank = () => ({ id: crypto.randomUUID(), screen: 'welcome', name: '', path: null, predict: null, ledger: null, rt: null, dis: null,
   order: [], ti: 0, ans: {}, streak: 0, alt: false, hints: 0, fb: [], log: [], started: Date.now() });
 let S = load();
 
 function load() { try { return { ...blank(), ...JSON.parse(localStorage.getItem(KEY) || '{}') }; } catch { return blank(); } }
-function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} }
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} clearTimeout(pushT); pushT = setTimeout(push, 1500); }
+// ---------- shared database (Supabase via /api/sync); the app still works offline from localStorage ----------
+let pushT;
+const post = body => fetch('/api/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+function push() { if (S.predict) post({ action: 'push', id: S.id, name: S.name, state: S }).catch(() => {}); }
+const typing = () => ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName);
+// Learner device: apply the teacher's approve/override decisions (stored separately, so they never overwrite progress).
+async function pullReviews() {
+  if (!S.predict || location.hash === '#teacher') return;
+  try {
+    const d = await (await fetch(`/api/sync?action=reviews&id=${encodeURIComponent(S.id)}`)).json();
+    let changed = false;
+    for (const r of d.reviews || []) { const f = S.fb.find(x => x.id === r.fb_id); if (f && (f.status !== r.status || f.teacherText !== r.teacher_text)) { f.status = r.status; f.teacherText = r.teacher_text; changed = true; } }
+    if (changed) { save(); if (!typing()) render(); }
+  } catch {}
+}
+// Teacher device: the class list from the database (falls back to this device's learner).
+const T = { learners: null, cur: null, err: false };
+async function loadLearners() {
+  try { const d = await (await fetch('/api/sync?action=learners')).json(); if (!d.ok) throw 0; T.learners = d.learners; T.err = false;
+    if (!T.learners.some(l => l.id === T.cur)) T.cur = T.learners[0]?.id ?? null; }
+  catch { T.err = true; T.learners = null; }
+  if (location.hash === '#teacher' && !typing()) render();
+}
+async function review(fbId, status, text) {
+  const L = T.learners?.find(l => l.id === T.cur)?.state || S;
+  for (const st of new Set([L, L.id === S.id ? S : L])) { const f = st.fb.find(x => x.id === fbId); if (f) { f.status = status; f.teacherText = text; } }
+  if (L.id === S.id) log('teacher_' + status, fbId);
+  render();
+  try { await post({ action: 'review', id: L.id, fb_id: fbId, status, teacher_text: text }); } catch {}
+}
 function log(ev, data) { S.log.push({ t: Date.now(), ev, data }); save(); }
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const $ = id => document.getElementById(id);
@@ -269,18 +299,23 @@ const V = {
     <p><button class="ghost" data-act="reset">Start over</button></p>`;
   },
 
-  teacher: () => `<div class="arch"><h1>Teacher view</h1></div><p class="muted">Mr. D'Souza · Olympiad batch. Approve or override every AI judgement before the learner relies on it. Changes appear in the learner's tab immediately.</p>
-    <div class="card"><b>${esc(S.name || '(learner has not started)')}</b>, now on <b>${esc(S.screen)}</b><br>
-    Prediction: <b>${esc(S.predict?.choice ?? '-')}</b> (${esc(S.predict?.conf ?? '-')}). "${esc(S.predict?.why ?? '')}"<br>
-    Path chosen by the system: <b>${esc({ M1: 'Soil misconception', M2: 'Water misconception', core: 'Core', adv: 'Olympiad (advanced)' }[S.path] ?? '-')}</b><br>
-    Ledger: ${S.ledger ? (S.ledger.ok ? 'correct' : 'in progress') + ` (${S.ledger.tries} tries)` : '-'} · Disagreement: ${S.dis ? (S.dis.ok ? 'resolved' : 'trying') + ` (oven max ${S.dis.maxH ?? 0} h)` : '-'} · Hints: ${S.hints}</div>
+  teacher: () => {
+    const L = T.learners?.find(l => l.id === T.cur)?.state || S;
+    const src = T.learners ? `Shared database · ${T.learners.length} learner${T.learners.length === 1 ? '' : 's'}` : T.err ? 'This device only (database unavailable)' : 'Loading the class…';
+    return `<div class="arch"><h1>Teacher view</h1></div><p class="muted">Mr. D'Souza · Olympiad batch. Approve or override every AI judgement. The learner's app picks up your decision within 15 seconds, on any device.</p>
+    <div class="card"><label for="who"><b>Learner</b></label> <span class="badge">${esc(src)}</span>
+    ${T.learners?.length ? `<select id="who" style="margin-top:8px">${T.learners.map(l => `<option value="${esc(l.id)}" ${l.id === T.cur ? 'selected' : ''}>${esc(l.name || 'Unnamed')} · ${esc(l.state?.screen ?? '')} · ${new Date(l.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</option>`).join('')}</select>` : ''}</div>
+    <div class="card"><b>${esc(L.name || '(learner has not started)')}</b>, now on <b>${esc(L.screen)}</b><br>
+    Prediction: <b>${esc(L.predict?.choice ?? '-')}</b> (${esc(L.predict?.conf ?? '-')}). "${esc(L.predict?.why ?? '')}"<br>
+    Path chosen by the system: <b>${esc({ M1: 'Soil misconception', M2: 'Water misconception', core: 'Core', adv: 'Olympiad (advanced)' }[L.path] ?? '-')}</b><br>
+    Ledger: ${L.ledger ? (L.ledger.ok ? 'correct' : 'in progress') + ` (${L.ledger.tries} tries)` : '-'} · Disagreement: ${L.dis ? (L.dis.ok ? 'resolved' : 'trying') + ` (oven max ${L.dis.maxH ?? 0} h)` : '-'} · Hints: ${L.hints}</div>
     <div class="card"><table><tr><th>Task</th><th>Answer</th><th>Tries</th><th>Result</th></tr>
-    ${Object.keys(TASKS).filter(id => S.ans[id]?.value !== undefined).map(id => { const a = S.ans[id]; return `<tr><td>${id.toUpperCase()}</td><td>${esc(Array.isArray(a.value) ? a.value.join(', ') : a.value)}</td><td>${a.tries}</td><td>${a.ok ? 'correct' : 'wrong'}${a.mis ? ' ' + a.mis : ''}</td></tr>`; }).join('') || '<tr><td colspan="4" class="muted">No answers yet.</td></tr>'}</table></div>
-    <h2>AI feedback queue</h2><p class="muted">Flagged items (the AI and the rule check disagree) come first.</p>${[...S.fb].sort((a, b) => (b.flag && b.status === 'pending') - (a.flag && a.status === 'pending')).map(f => `<div class="card"><div class="row"><b>${esc(f.where)}</b><span class="badge ${f.status}">${f.status}</span>${f.flag ? '<span class="badge sample">flagged: AI and rule check disagree</span>' : ''}${f.source === 'sample' ? '<span class="badge sample">recorded sample</span>' : f.source === 'rules' ? '<span class="badge sample">rule-based judge (AI failed check)</span>' : '<span class="badge">live AI</span>'}<span class="badge">verdict: ${esc(f.verdict)}</span></div>
+    ${Object.keys(TASKS).filter(id => L.ans[id]?.value !== undefined).map(id => { const a = L.ans[id]; return `<tr><td>${id.toUpperCase()}</td><td>${esc(Array.isArray(a.value) ? a.value.join(', ') : a.value)}</td><td>${a.tries}</td><td>${a.ok ? 'correct' : 'wrong'}${a.mis ? ' ' + a.mis : ''}</td></tr>`; }).join('') || '<tr><td colspan="4" class="muted">No answers yet.</td></tr>'}</table></div>
+    <h2>AI feedback queue</h2><p class="muted">Flagged items (the AI and the rule check disagree) come first.</p>${[...L.fb].sort((a, b) => (b.flag && b.status === 'pending') - (a.flag && a.status === 'pending')).map(f => `<div class="card"><div class="row"><b>${esc(f.where)}</b><span class="badge ${f.status}">${f.status}</span>${f.flag ? '<span class="badge sample">flagged: AI and rule check disagree</span>' : ''}${f.source === 'sample' ? '<span class="badge sample">recorded sample</span>' : f.source === 'rules' ? '<span class="badge sample">rule-based judge (AI failed check)</span>' : '<span class="badge">live AI</span>'}<span class="badge">verdict: ${esc(f.verdict)}</span></div>
       <p class="muted">Learner wrote: "${esc(f.learner)}"</p><p>AI Judge said: ${esc(f.text)}</p>
       ${f.agents ? `<details><summary>What Dr. Leaf and Skeptic told the learner</summary><p><b>Dr. Leaf:</b> ${esc(f.agents.explainer)}</p><p><b>Skeptic:</b> ${esc(f.agents.challenger)}</p></details>` : ''}
       <textarea id="ov${f.id}" placeholder="Write your own feedback to replace the AI's…">${esc(f.teacherText)}</textarea>
-      <div class="row" style="margin-top:8px"><button data-act="approve" data-arg="${f.id}">Approve AI feedback</button><button class="ghost" data-act="override" data-arg="${f.id}">Override with my text</button></div></div>`).join('') || '<p class="muted">No AI feedback yet.</p>'}`,
+      <div class="row" style="margin-top:8px"><button data-act="approve" data-arg="${f.id}">Approve AI feedback</button><button class="ghost" data-act="override" data-arg="${f.id}">Override with my text</button></div></div>`).join('') || '<p class="muted">No AI feedback yet.</p>'}`; },
 
   about: () => `<div class="arch"><h1>About</h1></div><div class="card">
     <p><b>The Willow Mystery</b>: a multi-agent learning environment for <i>"Where does a plant's mass come from?"</i></p>
@@ -386,8 +421,8 @@ const ACT = {
     if (S.ti === S.order.length && S.path === 'core' && !S.order.includes('t6') && S.order.every(id => S.ans[id]?.firstOk || TASKS[id].kind === 'text')) { S.order = [...S.order, 't6']; log('unlock', 't6'); }
     save(); S.ti < S.order.length ? render() : go('summary');
   },
-  approve(id) { const f = S.fb.find(x => x.id === id); f.status = 'approved'; log('teacher_approve', id); render(); },
-  override(id) { const t = $('ov' + id).value.trim(); if (!t) return say('Write your feedback first.'); const f = S.fb.find(x => x.id === id); f.status = 'overridden'; f.teacherText = t; log('teacher_override', id); render(); },
+  approve(id) { review(id, 'approved', ''); },
+  override(id) { const t = $('ov' + id).value.trim(); if (!t) return say('Write your feedback first.'); review(id, 'overridden', t); },
   reset() { if (confirm('Erase all progress on this device?')) { S = blank(); save(); location.hash = ''; render(); } }
 };
 
@@ -399,7 +434,9 @@ document.addEventListener('input', e => {
 });
 // Teacher edits in another tab update this tab live.
 addEventListener('storage', e => { if (e.key === KEY) { S = load(); render(); } });
-addEventListener('hashchange', render);
+addEventListener('hashchange', () => { render(); if (location.hash === '#teacher') loadLearners(); });
+document.addEventListener('change', e => { if (e.target.id === 'who') { T.cur = e.target.value; render(); } });
+setInterval(() => (location.hash === '#teacher' ? loadLearners() : pullReviews()), 15000);
 
 function render() {
   const view = location.hash === '#teacher' ? 'teacher' : location.hash === '#about' ? 'about' : S.screen;
@@ -408,3 +445,4 @@ function render() {
   document.querySelectorAll('.dock a').forEach(a => a.classList.toggle('on', a.getAttribute('href') === here));
 }
 render();
+if (location.hash === '#teacher') loadLearners(); else pullReviews();
