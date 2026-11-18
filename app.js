@@ -15,7 +15,12 @@ function go(screen) { S.screen = screen; log('screen', screen); render(); scroll
 
 const STEPS = ['predict', 'ledger', 'roundtable', 'disagree', 'tasks', 'summary'];
 const STEP_NAMES = ['Predict', 'Evidence', 'Round-table', 'Disagreement', 'Challenge', 'Summary'];
-const steps = () => `<div class="steps">${STEPS.map((s, i) => `<span class="${s === S.screen ? 'on' : ''}">${i + 1} ${STEP_NAMES[i]}</span>`).join('')}</div>`;
+// Glasshouse frame: one arched pane per step; panes behind you stay lit.
+const steps = () => { const at = STEPS.indexOf(S.screen);
+  return `<nav class="frame" aria-label="Progress: step ${at + 1} of 6, ${STEP_NAMES[at]}"><ol>${STEPS.map((s, i) => `<li class="${i < at ? 'lit' : i === at ? 'on' : ''}"><span>${i + 1}</span><em>${STEP_NAMES[i]}</em></li>`).join('')}</ol></nav>`; };
+// Enamel plaque for an agent: name, role, a fixed badge slot, the reply, and the evidence it leans on.
+const CITES = { leaf: '6CO₂ + 6H₂O → C₆H₁₂O₆ + 6O₂', skep: 'oven: 100 g fresh leaves → 12 g dry', judge: 'ledger: soil −0.057 kg vs tree +74.4 kg' };
+const plaque = (cls, name, role, body, slot = '') => `<article class="plaque ${cls}"><header><b>${name}</b><small>${role}</small><span class="slot">${slot}</span></header><p>${body}</p><p class="cites">Leans on: ${CITES[cls]}</p></article>`;
 
 // ---------- feedback items that the teacher reviews (C5) ----------
 function addFb(where, learner, text, source, verdict) {
@@ -29,7 +34,7 @@ function fbView(item) {
     : item.status === 'overridden' ? '<span class="badge overridden">Your teacher rewrote this feedback</span>'
     : '<span class="badge">Waiting for teacher review</span>';
   const src = item.source === 'sample' ? ' <span class="badge sample">Recorded sample: live AI unavailable</span>' : '';
-  return `<div class="agent judge"><b>Evidence Judge</b>${esc(shown)}<div style="margin-top:6px">${badge}${src}</div></div>`;
+  return plaque('judge', 'Evidence Judge', 'checks claims against evidence', esc(shown), badge + src);
 }
 
 // ---------- rule-based judge: fallback when AI fails, and the check for T5 ----------
@@ -110,7 +115,7 @@ const ALT = `<div class="card"><h3 style="margin-top:0">Let us try it another wa
 
 // ---------- views ----------
 const V = {
-  welcome: () => `<h1>The Willow Mystery</h1>
+  welcome: () => `<div class="arch"><h1>The Willow Mystery</h1></div>
     <p class="lead">In the 1640s, Jan van Helmont planted a <b>2.3 kg</b> willow in <b>90.7 kg</b> of dried soil. He gave it only rainwater. Five years later the tree weighed <mark>76.7 kg</mark>.</p>
     <p class="lead">Where did <b>74 kg</b> of tree come from? Let us put the question on trial with three AI agents who will <b>not</b> always agree.</p>
     <div class="card"><label for="name"><b>Your first name</b></label><input id="name" type="text" value="${esc(S.name)}" placeholder="e.g. Ishita" autocomplete="given-name">
@@ -151,8 +156,8 @@ const V = {
   disagree: () => {
     const h = S.dis?.h ?? 0;
     return `${steps()}<h2>Step 4 · Dr. Leaf and Skeptic disagree</h2>
-    <div class="versus"><div class="agent leaf"><b>Dr. Leaf</b>"Most of the tree's mass came from <mark>carbon dioxide in the air</mark>."</div>
-    <div class="agent skep"><b>Skeptic</b>"No. Most of a living tree's mass is <mark>water</mark>."</div></div>
+    <div class="versus">${plaque('leaf', 'Dr. Leaf', 'claims', '"Most of the tree\'s mass came from <mark>carbon dioxide in the air</mark>."')}
+    ${plaque('skep', 'Skeptic', 'claims', '"No. Most of a living tree\'s mass is <mark>water</mark>."')}</div>
     <p>Neither agent will tell you who is right. <b>You decide</b>, using the drying oven. Drag the slider to dry 100 g of fresh willow leaves at 70 °C.</p>
     <div class="card"><label for="oven"><b>Hours in the oven: <span id="hv">${h}</span></b></label>
     <input id="oven" type="range" min="0" max="48" value="${h}" style="width:100%">
@@ -178,7 +183,7 @@ const V = {
     ${S.alt && S.altAt === S.ti ? ALT : ''}
     <div class="card"><p>${T.q}</p>${input}
     <div class="row"><button data-act="answer" ${done ? 'disabled' : ''}>Check</button><button class="ghost" data-act="hint">Hint</button></div>
-    <div id="hint">${A?.hinted ? `<p class="muted">💡 ${T.hint}</p>` : ''}</div>
+    <div id="hint">${A?.hinted ? `<p class="muted"><b>Hint:</b> ${T.hint}</p>` : ''}</div>
     <div id="tres">${A?.value !== undefined ? taskFb(id) : ''}</div></div>
     ${done ? `<button data-act="next">${S.ti + 1 < S.order.length ? 'Next challenge →' : 'See my summary →'}</button>` : ''}`;
   },
@@ -200,19 +205,19 @@ const V = {
     <p><button class="ghost" data-act="reset">Start over</button></p>`;
   },
 
-  teacher: () => `<h1>Teacher view</h1><p class="muted">Mr. D'Souza · Olympiad batch. Approve or override every AI judgement before the learner relies on it. Changes appear in the learner's tab immediately.</p>
+  teacher: () => `<div class="arch"><h1>Teacher view</h1></div><p class="muted">Mr. D'Souza · Olympiad batch. Approve or override every AI judgement before the learner relies on it. Changes appear in the learner's tab immediately.</p>
     <div class="card"><b>${esc(S.name || '(learner has not started)')}</b>, now on <b>${esc(S.screen)}</b><br>
     Prediction: <b>${esc(S.predict?.choice ?? '-')}</b> (${esc(S.predict?.conf ?? '-')}). "${esc(S.predict?.why ?? '')}"<br>
     Path chosen by the system: <b>${esc({ M1: 'Soil misconception', M2: 'Water misconception', core: 'Core', adv: 'Olympiad (advanced)' }[S.path] ?? '-')}</b><br>
     Ledger: ${S.ledger ? (S.ledger.ok ? 'correct' : 'in progress') + ` (${S.ledger.tries} tries)` : '-'} · Disagreement: ${S.dis ? (S.dis.ok ? 'resolved' : 'trying') + ` (oven max ${S.dis.maxH ?? 0} h)` : '-'} · Hints: ${S.hints}</div>
     <div class="card"><table><tr><th>Task</th><th>Answer</th><th>Tries</th><th>Result</th></tr>
-    ${Object.keys(TASKS).filter(id => S.ans[id]).map(id => { const a = S.ans[id]; return `<tr><td>${id.toUpperCase()}</td><td>${esc(Array.isArray(a.value) ? a.value.join(', ') : a.value)}</td><td>${a.tries}</td><td>${a.ok ? '✔' : '✘'}${a.mis ? ' ' + a.mis : ''}</td></tr>`; }).join('') || '<tr><td colspan="4" class="muted">No answers yet.</td></tr>'}</table></div>
+    ${Object.keys(TASKS).filter(id => S.ans[id]).map(id => { const a = S.ans[id]; return `<tr><td>${id.toUpperCase()}</td><td>${esc(Array.isArray(a.value) ? a.value.join(', ') : a.value)}</td><td>${a.tries}</td><td>${a.ok ? 'correct' : 'wrong'}${a.mis ? ' ' + a.mis : ''}</td></tr>`; }).join('') || '<tr><td colspan="4" class="muted">No answers yet.</td></tr>'}</table></div>
     <h2>AI feedback queue</h2>${S.fb.map(f => `<div class="card"><div class="row"><b>${esc(f.where)}</b><span class="badge ${f.status}">${f.status}</span>${f.source === 'sample' ? '<span class="badge sample">recorded sample</span>' : '<span class="badge">live AI</span>'}<span class="badge">verdict: ${esc(f.verdict)}</span></div>
       <p class="muted">Learner wrote: "${esc(f.learner)}"</p><p>AI said: ${esc(f.text)}</p>
       <textarea id="ov${f.id}" placeholder="Write your own feedback to replace the AI's…">${esc(f.teacherText)}</textarea>
       <div class="row" style="margin-top:8px"><button data-act="approve" data-arg="${f.id}">Approve AI feedback</button><button class="ghost" data-act="override" data-arg="${f.id}">Override with my text</button></div></div>`).join('') || '<p class="muted">No AI feedback yet.</p>'}`,
 
-  about: () => `<h1>About</h1><div class="card">
+  about: () => `<div class="arch"><h1>About</h1></div><div class="card">
     <p><b>The Willow Mystery</b>: a multi-agent learning environment for <i>"Where does a plant's mass come from?"</i></p>
     <table><tr><td>Identity token</td><td><b>24B0354</b></td></tr><tr><td>Problem</td><td>P3 Multi-agent collaborative learning</td></tr>
     <tr><td>Topic</td><td>P3-T9 Where does a plant's mass come from? (Cl. 7–10)</td></tr><tr><td>Learner</td><td>L6 High-achieving Olympiad learner</td></tr>
@@ -232,14 +237,14 @@ function ovenOut(h) {
 }
 function rtView() {
   const r = S.rt; const tag = r.source === 'sample' ? ' <span class="badge sample">Recorded sample: live AI unavailable</span>' : '';
-  return `<div class="agent leaf"><b>Dr. Leaf · Explainer</b>${esc(r.explainer)}${tag}</div>
-  <div class="agent skep"><b>Skeptic · Challenger</b> <small>read Dr. Leaf's reply</small><br>${esc(r.challenger)}${tag}</div>
-  <small class="muted">Evidence Judge read your answer and both agents:</small>${fbView(S.fb.find(f => f.id === r.fbId))}`;
+  return `${plaque('leaf', 'Dr. Leaf', 'Explainer', esc(r.explainer), tag)}
+  ${plaque('skep', 'Skeptic', 'Challenger · read Dr. Leaf\'s reply', esc(r.challenger), tag)}
+  <p class="muted">The Evidence Judge read your answer and both agents:</p>${fbView(S.fb.find(f => f.id === r.fbId))}`;
 }
 function taskFb(id) {
   const a = S.ans[id];
   if (TASKS[id].kind === 'text') return fbView(S.fb.find(f => f.id === a.fbId));
-  return `<div class="fb ${a.ok ? 'ok' : 'no'}">${a.ok ? '✔ ' : ''}${a.fb}${!a.ok && a.tries >= 2 ? `<br><b>Model answer:</b> ${model(id)}` : !a.ok ? '<br><i>Have another go.</i>' : ''}</div>`;
+  return `<div class="fb ${a.ok ? 'ok' : 'no'}">${a.ok ? '<b>Correct.</b> ' : ''}${a.fb}${!a.ok && a.tries >= 2 ? `<br><b>Model answer:</b> ${model(id)}` : !a.ok ? '<br><i>Have another go.</i>' : ''}</div>`;
 }
 const model = id => ({ t1: 'Carbon dioxide from the air', t2: '0.057 ÷ 74.4 × 100 ≈ 0.08%', t3: TASKS.t3.key.map((k, i) => `${TASKS.t3.items[i]} → ${k}`).join('; '), t4: 'about 45 g (spinach is ~90% water)', t6: 'In the O₂ gas released, so sugar\'s oxygen comes from CO₂' }[id]);
 
