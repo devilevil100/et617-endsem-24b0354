@@ -197,23 +197,32 @@ const ALT = `<div class="card"><h3 style="margin-top:0">Let us try it another wa
 <li><b>Oxygen:</b> the 6 O₂ released are water's oxygen, so the 6 O kept in the sugar came from CO₂.</li></ol>
 <p>By mass, glucose is 72 g carbon + 96 g oxygen + 12 g hydrogen per 180 g. That means <mark>168 of every 180 g came from CO₂</mark>.</p></div>`;
 
-// ---------- views ----------
-const V = {
-  welcome: () => `<label class="namebar"><span class="sr">Your first name</span>${ICON.user}<input id="name" type="text" value="${esc(S.name)}" placeholder="Type your first name" autocomplete="given-name"></label>
-    <h1 class="title">Solve the<br>Willow Mystery</h1>
-    <div class="carousel" id="car" tabindex="0" aria-roledescription="carousel" aria-label="About the mystery: swipe or use arrow keys">
-      <section class="slide feature" aria-label="1 of 3"><h2>Where did 74 kg of tree come from?</h2>${HERO}<button class="play" data-act="start">${ICON.play}Start</button></section>
-      <section class="slide s-agents" aria-label="2 of 3"><h2>Meet the round-table</h2>
+// Welcome carousel: the current slide sits in the middle and its neighbours peek at both sides.
+// It loops: swipe, tap a side edge, tap a dot or use the arrow keys.
+let CI = 0;
+const SLIDE_BG = ['var(--orange)', 'var(--green)', 'var(--amber)'];
+const SLIDES = () => [
+  `<section class="slide feature" aria-label="1 of 3"><h2>Where did 74 kg of tree come from?</h2>${HERO}<button class="play" data-act="start">${ICON.play}Start</button></section>`,
+  `<section class="slide s-how" aria-label="2 of 3"><h2>How it works</h2>
+        <ol class="how"><li>Predict</li><li>Weigh the evidence</li><li>Explain to the agents</li><li>Settle their disagreement</li><li>Take the challenge</li><li>See what changed</li></ol>
+        <p class="note">About 15 min · stop and resume any time · your teacher reviews the AI</p></section>`,
+  `<section class="slide s-agents" aria-label="3 of 3"><h2>Meet the round-table</h2>
         <ul class="who-list">
           <li><span class="av">${FACE.leaf}</span><span><b>Dr. Leaf</b><small>explains, by counting atoms</small></span></li>
           <li><span class="av">${FACE.skep}</span><span><b>Skeptic</b><small>argues the other side</small></span></li>
           <li><span class="av">${FACE.judge}</span><span><b>Evidence Judge</b><small>checks every claim, gives you feedback</small></span></li>
-        </ul><p class="note">They will not always agree. <b>You</b> settle it, with evidence.</p></section>
-      <section class="slide s-how" aria-label="3 of 3"><h2>How it works</h2>
-        <ol class="how"><li>Predict</li><li>Weigh the evidence</li><li>Explain to the agents</li><li>Settle their disagreement</li><li>Take the challenge</li><li>See what changed</li></ol>
-        <p class="note">About 15 min · stop and resume any time · your teacher reviews the AI</p></section>
-    </div>
-    <div class="pager">${[0, 1, 2].map(i => `<button class="dot ${i ? '' : 'on'}" data-act="slide" data-arg="${i}" aria-label="Show slide ${i + 1} of 3"></button>`).join('')}</div>
+        </ul><p class="note">They will not always agree. <b>You</b> settle it, with evidence.</p></section>`];
+const carousel = (d = 0) => { const at = k => (CI + k + 3) % 3;
+  return `<div class="side left" style="background:${SLIDE_BG[at(-1)]}" data-act="turn" data-arg="-1" aria-hidden="true"></div>
+  <div class="center ${d > 0 ? 'in-right' : d < 0 ? 'in-left' : ''}" aria-live="polite">${SLIDES()[CI]}</div>
+  <div class="side right" style="background:${SLIDE_BG[at(1)]}" data-act="turn" data-arg="1" aria-hidden="true"></div>`; };
+function paint(d) { $('car').innerHTML = carousel(d); document.querySelectorAll('.pager .dot').forEach((x, k) => x.classList.toggle('on', k === CI)); }
+// ---------- views ----------
+const V = {
+  welcome: () => `<label class="namebar"><span class="sr">Your first name</span>${ICON.user}<input id="name" type="text" value="${esc(S.name)}" placeholder="Type your first name" autocomplete="given-name"></label>
+    <h1 class="title">Solve the<br>Willow Mystery</h1>
+    <div class="carousel" id="car" tabindex="0" aria-roledescription="carousel" aria-label="About the mystery. Swipe, tap a side, or use the arrow keys">${carousel()}</div>
+    <div class="pager">${[0, 1, 2].map(i => `<button class="dot ${i === CI ? 'on' : ''}" data-act="goslide" data-arg="${i}" aria-label="Show slide ${i + 1} of 3"></button>`).join('')}</div>
     <div class="card story"><p>In the 1640s, Jan van Helmont planted a <b>2.3 kg</b> willow in <b>90.7 kg</b> of dried soil and gave it only rainwater. Five years later it weighed <mark>76.7 kg</mark>.</p>
     <p>Put the question on trial with three AI agents who will <b>not</b> always agree.</p></div>`,
 
@@ -452,7 +461,8 @@ const ACT = {
     if (S.ti === S.order.length && S.path === 'core' && !S.order.includes('t6') && S.order.every(id => S.ans[id]?.firstOk || TASKS[id].kind === 'text')) { S.order = [...S.order, 't6']; log('unlock', 't6'); }
     save(); S.ti < S.order.length ? render() : go('summary');
   },
-  slide(i) { $('car').children[+i].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); },
+  turn(d) { CI = (CI + +d + 3) % 3; paint(+d); },
+  goslide(i) { const d = +i === CI ? 0 : (+i - CI + 3) % 3 === 1 ? 1 : -1; CI = +i; paint(d); },
   post() { const choice = picked('post'), conf = picked('pc'); if (!choice || !conf) return say('Pick an answer and how sure you are.'); S.post = { choice, conf }; log('post', S.post); render(); },
   tlogin() { const c = $('tcode').value.trim(); if (!c) return say('Enter the teacher code.'); T.code = c; T.bad = false; try { sessionStorage.setItem('tcode', c); } catch {} T.learners = null; render(); loadLearners(); },
   approve(id) { review(id, 'approved', ''); },
@@ -468,6 +478,11 @@ document.addEventListener('input', e => {
 });
 // Teacher edits in another tab update this tab live.
 addEventListener('storage', e => { if (e.key === KEY) { S = load(); render(); } });
+// Swipe on the carousel (touch, pen or mouse drag); vertical page scrolling still works (touch-action: pan-y).
+let sx = null;
+document.addEventListener('pointerdown', e => { sx = e.target.closest('#car') ? e.clientX : null; });
+document.addEventListener('pointerup', e => { if (sx === null) return; const dx = e.clientX - sx; sx = null; if (Math.abs(dx) > 40) ACT.turn(dx < 0 ? 1 : -1); });
+document.addEventListener('keydown', e => { if (document.activeElement?.id === 'car' && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) ACT.turn(e.key === 'ArrowRight' ? 1 : -1); });
 addEventListener('hashchange', () => { render(); if (location.hash === '#teacher') loadLearners(); });
 document.addEventListener('change', e => { if (e.target.id === 'who') { T.cur = e.target.value; render(); } });
 setInterval(() => (location.hash === '#teacher' ? loadLearners() : pullReviews()), 15000);
@@ -477,12 +492,6 @@ function render() {
   $('app').innerHTML = (view === 'teacher' || view === 'about' ? '' : topbar()) + (V[view] || V.welcome)();
   const here = view === 'teacher' ? '#teacher' : view === 'about' ? '#about' : '#';
   document.querySelectorAll('.dock a').forEach(a => a.classList.toggle('on', a.getAttribute('href') === here));
-  // Welcome carousel: native scroll-snap; the dots follow the swipe and jump on tap.
-  const car = $('car');
-  if (car) car.addEventListener('scroll', () => {
-    const i = Math.round(car.scrollLeft / Math.max(1, car.scrollWidth - car.clientWidth) * (car.children.length - 1));
-    document.querySelectorAll('.pager .dot').forEach((d, k) => d.classList.toggle('on', k === i));
-  }, { passive: true });
 }
 render();
 if (location.hash === '#teacher') loadLearners(); else pullReviews();
