@@ -44,7 +44,8 @@ async function loadLearners() {
     const d = await r.json(); if (!d.ok) throw 0; T.learners = d.learners.map(l => ({ ...l, id: safeId(l.id), state: clean(l.state) })); T.err = false;
     if (!T.learners.some(l => l.id === T.cur)) T.cur = T.learners[0]?.id ?? null; }
   catch { T.err = !T.bad; T.learners = null; }
-  if (location.hash === '#teacher' && !typing()) render();
+  const was = T.checking; T.checking = false;
+  if (location.hash === '#teacher' && (was || !typing())) render();
 }
 async function review(fbId, status, text) {
   const L = T.learners?.find(l => l.id === T.cur)?.state || S;
@@ -369,6 +370,7 @@ const V = {
     if (!T.code) return `<div class="arch"><h1>Teacher view</h1></div><div class="card"><label for="tcode"><b>Teacher code</b></label>
       <input id="tcode" type="password" autocomplete="off" style="margin-top:8px"><p class="muted">${T.bad ? '<b>That code did not work.</b> ' : ''}Only the coach can see learners' answers and review the AI.</p>
       <button data-act="tlogin">Open teacher view</button></div>`;
+    if (T.checking) return `<div class="arch"><h1>Teacher view</h1></div><div class="card"><p class="muted">Checking the teacher code…</p></div>`;
     const L = T.learners?.find(l => l.id === T.cur)?.state || S;
     const all = T.learners?.map(l => l.state) || [], air = c => c?.startsWith('Air');
     const glance = all.length ? `<div class="card"><h3 style="margin-top:0">Class at a glance</h3><table class="facts">
@@ -503,7 +505,7 @@ const ACT = {
   turn(d) { CI = (CI + +d + 3) % 3; paint(+d); },
   goslide(i) { const d = +i === CI ? 0 : (+i - CI + 3) % 3 === 1 ? 1 : -1; CI = +i; paint(d); },
   post() { const choice = picked('post'), conf = picked('pc'); if (!choice || !conf) return say('Pick an answer and how sure you are.'); S.post = { choice, conf }; log('post', S.post); render(); },
-  tlogin() { const c = $('tcode').value.trim(); if (!c) return say('Enter the teacher code.'); T.code = c; T.bad = false; try { sessionStorage.setItem('tcode', c); } catch {} T.learners = null; render(); loadLearners(); },
+  tlogin() { const c = $('tcode').value.trim(); if (!c) return say('Enter the teacher code.'); T.code = c; T.bad = false; T.checking = true; try { sessionStorage.setItem('tcode', c); } catch {} T.learners = null; render(); loadLearners(); },
   approve(id) { review(id, 'approved', ''); },
   override(id) { const t = $('ov' + id).value.trim(); if (!t) return say('Write your feedback first.'); T.edit = null; review(id, 'overridden', t); },
   tedit(id) { T.edit = id || null; render(); if (id) $('ov' + id)?.focus(); },
