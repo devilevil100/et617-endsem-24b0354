@@ -238,7 +238,7 @@ const V = {
     if (!T) { S.screen = 'summary'; save(); return V.summary(); }
     let input = '';
     if (T.kind === 'mcq') input = `<div class="opts">${T.options.map(o => `<label><input type="radio" name="a" value="${esc(o)}" ${A?.value === o ? 'checked' : ''}> ${o}</label>`).join('')}</div>`;
-    if (T.kind === 'num') input = `<div class="row"><input id="a" type="number" step="any" inputmode="decimal" style="max-width:200px" value="${A?.value ?? ''}"> <b>${T.unit}</b></div>`;
+    if (T.kind === 'num') input = `<label class="unit"><span class="sr">Your answer in ${T.unit}</span><input id="a" type="number" step="any" inputmode="decimal" value="${A?.value ?? ''}"><span aria-hidden="true">${T.unit}</span></label>`;
     if (T.kind === 'match') input = `<table>${T.items.map((it, i) => `<tr><td><b>${it}</b></td><td><select id="m${i}" aria-label="${it}"><option value="">choose…</option>${T.sources.map(s => `<option ${A?.value?.[i] === s ? 'selected' : ''}>${s}</option>`).join('')}</select></td></tr>`).join('')}</table>`;
     if (T.kind === 'text') input = `<textarea id="a" placeholder="Actually, plants…">${esc(A?.value ?? '')}</textarea>`;
     const done = A && (A.ok || A.tries >= 2);
