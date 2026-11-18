@@ -84,15 +84,12 @@
   /* Agent cards: outlined avatar, name, role; review badges always in the same slot. */
   .plaque { background: var(--paper); border-radius: 24px; margin: 14px 0; box-shadow: var(--lift); overflow: hidden; }
   .plaque header { display: flex; align-items: center; gap: 12px; padding: 14px 16px 0; flex-wrap: wrap; }
-  .plaque .av { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; border: 2.5px solid var(--ink); background: var(--green); color: var(--ink); flex: none; }
   .plaque .who { display: flex; flex-direction: column; line-height: 1.2; }
   .plaque .who b { font: 800 1.08rem/1.15 var(--display); }
   .plaque .who small { font-size: .85rem; color: var(--quiet); font-weight: 700; }
   .plaque .slot { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
   .plaque p { margin: 12px 16px; }
   .plaque .cites { font-size: .86rem; color: var(--quiet); background: var(--cream); margin: 0; padding: 10px 16px; font-weight: 700; }
-  .plaque.skep .av { background: var(--orange); color: #fff; }
-  .plaque.judge .av { background: var(--amber); }
   .versus { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .versus .plaque { margin: 6px 0; }
   @media (max-width: 560px) { .versus { grid-template-columns: 1fr; } }
@@ -110,6 +107,61 @@
   .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
   .muted { color: var(--quiet); font-size: .93rem; }
 
+  /* Background world: paper grain, corner stripes, a wavy ribbon, green arcs and sparkles. Edges only; content stays on white. */
+  body { background-color: var(--cream); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .3 0 0 0 0 .2 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+  .decor { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+  .decor .stripe { position: absolute; width: 520px; height: 30px; left: -170px; transform: rotate(-42deg); }
+  .decor .s1 { top: 70px; background: var(--amber); }
+  .decor .s2 { top: 118px; height: 12px; background: var(--orange); }
+  .decor svg { position: absolute; }
+  .decor .ribbon { top: -10px; right: -40px; width: 260px; }
+  .decor .arc { bottom: 40px; right: -90px; width: 220px; }
+  .decor .blob { bottom: -60px; left: -70px; width: 200px; }
+  .decor .sp { width: 22px; }
+  @media (max-width: 560px) { .decor .ribbon { width: 190px; right: -70px; } .decor .stripe { left: -230px; } }
+
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  /* Top bar: learner chip and leaf points, like a game header. */
+  .topbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 14px 0 6px; }
+  .chip { display: inline-flex; align-items: center; gap: 8px; padding: 5px 14px 5px 5px; background: var(--paper); border-radius: 999px; box-shadow: var(--lift); font: 700 .98rem/1 var(--display); }
+  .chip:last-child { padding: 7px 8px 7px 16px; }
+  .chip .me { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--amber); border: 2px solid var(--ink); font-weight: 800; }
+  .namebar { display: flex; align-items: center; gap: 10px; margin: 10px 0 4px; padding: 4px 6px 4px 16px; background: var(--paper); border-radius: 999px; box-shadow: var(--lift); color: var(--quiet); }
+  .namebar input { border: 0; box-shadow: none !important; padding: 12px 8px; background: transparent; }
+  .title { font-size: clamp(2.6rem, 11vw, 3.6rem); margin: 22px 0 18px; }
+
+  /* Feature card with peeking neighbours, like a game carousel. The Start pill overlaps its bottom edge. */
+  .stage { display: grid; grid-template-columns: 18px 1fr 18px; gap: 10px; margin: 0 -16px; align-items: stretch; }
+  .peek { border-radius: 0 26px 26px 0; }
+  .peek.amber { background: var(--amber); }
+  .peek.green { background: var(--green); border-radius: 26px 0 0 26px; }
+  .feature { position: relative; background: var(--orange); border-radius: 34px; padding: 22px 18px 44px; text-align: center; box-shadow: 0 22px 40px -24px rgba(242,98,42,.9); }
+  .feature h2 { color: #fff; margin: 0 0 6px; font-size: clamp(1.5rem, 6vw, 1.9rem); }
+  .feature .hero-art { max-width: 300px; margin: 0 auto; }
+  .play { position: absolute; left: 50%; bottom: -28px; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 10px; padding: 16px 34px; font-size: 1.15rem; background: var(--orange-d); border: 4px solid var(--cream); box-shadow: 0 12px 22px -10px rgba(212,72,22,.9); }
+  .play:active { transform: translateX(-50%) scale(.98); }
+  .pager { display: flex; justify-content: center; gap: 6px; margin: 44px 0 10px; }
+  .pager i { width: 14px; height: 6px; border-radius: 99px; background: var(--ink); }
+  .pager i.on { width: 40px; background: var(--orange); }
+  .story p { margin: 0 0 10px; }
+  .av { display: inline-grid; place-items: center; width: 50px; height: 50px; border-radius: 50%; border: 2.5px solid var(--ink); overflow: hidden; flex: none; background: var(--paper); }
+  .av svg { width: 100%; height: 100%; display: block; }
+  .av.sm { width: 38px; height: 38px; margin-right: -10px; }
+  .story .row .muted { margin-left: 16px; }
+  .av.big { width: 68px; height: 68px; border-width: 3px; box-shadow: 0 0 0 4px var(--paper), var(--lift); }
+
+  /* Round-table podium: the three agents in speaking order, building up to the Judge. */
+  .podium { display: grid; grid-template-columns: repeat(3, 1fr); align-items: end; margin: 18px 0 0; text-align: center; }
+  .podium .col { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .podium b { font: 800 1rem/1.15 var(--display); margin-top: 8px; }
+  .podium small { font-size: .82rem; color: var(--quiet); font-weight: 700; margin-bottom: 8px; }
+  .blk { width: 100%; display: grid; place-items: center; color: #fff; font: 800 1.9rem/1 var(--display); border-top: 12px solid #FFC25A; border-radius: 8px 8px 0 0; }
+  .blk.b1 { height: 70px; background: #F47D45; }
+  .blk.b2 { height: 96px; background: var(--orange); }
+  .blk.b3 { height: 124px; background: var(--orange-d); }
+  .sheet { position: relative; background: var(--paper); border-radius: 30px; padding: 20px; margin-top: -16px; box-shadow: var(--lift); }
+  .sheet textarea { margin-top: 8px; }
+
   /* Bottom dock: black-outlined pill bar; the current place is the orange pill. Identity token underneath. */
   footer { position: fixed; left: 0; right: 0; bottom: 0; padding: 10px 12px 8px; background: linear-gradient(to top, var(--cream) 70%, transparent); }
   .dock { display: flex; gap: 6px; max-width: 420px; margin: 0 auto; padding: 5px; background: var(--paper); border: 2.5px solid var(--ink); border-radius: 999px; box-shadow: var(--lift); }
@@ -122,6 +174,15 @@
 </style>
 </head>
 <body>
+<div class="decor" aria-hidden="true">
+  <div class="stripe s1"></div><div class="stripe s2"></div>
+  <svg class="ribbon" viewBox="0 0 260 160" fill="none"><path d="M250 10C200 30 210 80 160 90s-60-40-110-10S20 140 0 150" stroke="#F2622A" stroke-width="26" stroke-linecap="round"/></svg>
+  <svg class="arc" viewBox="0 0 220 220" fill="none"><circle cx="160" cy="160" r="110" stroke="#2EE06E" stroke-width="20"/><circle cx="160" cy="160" r="72" stroke="#141414" stroke-width="3"/></svg>
+  <svg class="blob" viewBox="0 0 200 200"><path d="M40 20c50-20 120 10 140 70s-20 110-80 110S0 160 0 110 0 36 40 20Z" fill="#F2622A"/></svg>
+  <svg class="sp" style="top:180px;right:28px" viewBox="0 0 24 24"><path d="M12 1c.7 5.5 4.5 9.3 11 11-6.5 1.7-10.3 5.5-11 11-.7-5.5-4.5-9.3-11-11 6.5-1.7 10.3-5.5 11-11Z" fill="#F2622A"/></svg>
+  <svg class="sp" style="top:46%;left:14px;width:14px" viewBox="0 0 24 24"><path d="M12 1c.7 5.5 4.5 9.3 11 11-6.5 1.7-10.3 5.5-11 11-.7-5.5-4.5-9.3-11-11 6.5-1.7 10.3-5.5 11-11Z" fill="#FDB62F"/></svg>
+  <svg class="sp" style="top:30px;left:46%;width:16px" viewBox="0 0 24 24"><path d="M12 1c.7 5.5 4.5 9.3 11 11-6.5 1.7-10.3 5.5-11 11-.7-5.5-4.5-9.3-11-11 6.5-1.7 10.3-5.5 11-11Z" fill="#F2622A"/></svg>
+</div>
 <main id="app"></main>
 <footer>
   <nav class="dock" aria-label="Main">

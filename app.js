@@ -28,25 +28,37 @@ const steps = () => { const at = STEPS.indexOf(S.screen);
   return `<nav class="progress" aria-label="Progress: step ${at + 1} of 6, ${STEP_NAMES[at]}"><span class="dots">${STEPS.map((s, i) => `<i class="${i < at ? 'done' : i === at ? 'on' : ''}"></i>`).join('')}</span><span>Step ${at + 1} of 6 · ${STEP_NAMES[at]}</span></nav>`; };
 // Agent card: avatar, name, role, a fixed badge slot, the reply, and the evidence it leans on.
 const CITES = { leaf: '6CO₂ + 6H₂O → C₆H₁₂O₆ + 6O₂', skep: 'oven: 100 g fresh leaves → 12 g dry', judge: 'ledger: soil −0.057 kg vs tree +74.4 kg' };
-const plaque = (cls, name, role, body, slot = '') => `<article class="plaque ${cls}"><header><span class="av">${ICON[cls]}</span><span class="who"><b>${name}</b><small>${role}</small></span><span class="slot">${slot}</span></header><p>${body}</p><p class="cites">Leans on: ${CITES[cls]}</p></article>`;
+ICON.play = svg('<path d="M8 5v14l11-7z" fill="currentColor"/>');
+ICON.user = svg('<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/>');
+// Cartoon faces for the three agents (drawn for this app).
+const FACE = {
+  leaf: `<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="24" fill="#2EE06E"/><path d="M24 5c7 0 11 4 11 9-6 1-10-2-11-9Z" fill="#13863F" stroke="#141414" stroke-width="1.5"/><circle cx="24" cy="28" r="14" fill="#C98E5E" stroke="#141414" stroke-width="2"/><path d="M10.5 25c1-8 6-12.5 13.5-12.5S36.5 17 37.5 25c-4-3-9-4.5-13.5-4.5S14.5 22 10.5 25Z" fill="#2b2118"/><circle cx="19" cy="29" r="4.2" fill="#fff" stroke="#141414" stroke-width="1.8"/><circle cx="29" cy="29" r="4.2" fill="#fff" stroke="#141414" stroke-width="1.8"/><path d="M23.2 29h1.6" stroke="#141414" stroke-width="1.8"/><circle cx="19" cy="29.5" r="1.7" fill="#141414"/><circle cx="29" cy="29.5" r="1.7" fill="#141414"/><path d="M20 35.5c2.5 2.5 5.5 2.5 8 0" fill="none" stroke="#141414" stroke-width="2" stroke-linecap="round"/></svg>`,
+  skep: `<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="24" fill="#F2622A"/><circle cx="24" cy="28" r="14" fill="#D9A06F" stroke="#141414" stroke-width="2"/><path d="M10 24l3-10 5 5 3-8 4 6 4-6 3 8 4-4 2 9c-5-3-10-4.5-14-4.5S15 21 10 24Z" fill="#141414"/><path d="M15.5 25.5l6-2.5" stroke="#141414" stroke-width="2.3" stroke-linecap="round"/><path d="M27 25.5h6" stroke="#141414" stroke-width="2.3" stroke-linecap="round"/><circle cx="19" cy="29.5" r="1.9" fill="#141414"/><circle cx="30" cy="29.5" r="1.9" fill="#141414"/><path d="M19.5 36c3.5-1.5 6.5-1.2 9.5.8" fill="none" stroke="#141414" stroke-width="2" stroke-linecap="round"/></svg>`,
+  judge: `<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="24" fill="#FDB62F"/><g fill="#fff" stroke="#141414" stroke-width="1.6"><circle cx="12.5" cy="24" r="4.2"/><circle cx="12.5" cy="32" r="4.2"/><circle cx="35.5" cy="24" r="4.2"/><circle cx="35.5" cy="32" r="4.2"/></g><circle cx="24" cy="28.5" r="12.5" fill="#B87A4B" stroke="#141414" stroke-width="2"/><path d="M11.5 22c0-7.5 5.5-12 12.5-12s12.5 4.5 12.5 12c-3.5-2.5-8-3.5-12.5-3.5S15 19.5 11.5 22Z" fill="#fff" stroke="#141414" stroke-width="1.6"/><path d="M17.5 25.5h5M25.5 25.5h5" stroke="#141414" stroke-width="2" stroke-linecap="round"/><circle cx="20" cy="29.5" r="1.8" fill="#141414"/><circle cx="28" cy="29.5" r="1.8" fill="#141414"/><path d="M20.5 35.5h7" stroke="#141414" stroke-width="2" stroke-linecap="round"/></svg>`
+};
+// Leaf points: a light game layer for an Olympiad learner (first-try 100, after retry 50, ledger and verdict 100 each).
+const points = () => Object.values(S.ans).reduce((n, a) => n + (a.firstOk ? 100 : a.ok ? 50 : 0), 0) + (S.ledger?.ok ? 100 : 0) + (S.dis?.ok ? 100 : 0);
+const COIN = `<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><circle cx="12" cy="12" r="10.5" fill="#FDB62F" stroke="#E89A12" stroke-width="2"/><path d="M8 16c0-5.5 3-8.5 8.5-8.5 0 5.5-3 8.5-8.5 8.5Z" fill="#fff"/><path d="M8.5 15.5l4.5-4.5" stroke="#E89A12" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+const topbar = () => `<div class="topbar"><span class="chip"><span class="me">${esc((S.name || '?')[0].toUpperCase())}</span>${esc(S.name || 'Scientist')}</span><span class="chip" aria-label="${points()} leaf points">${points()} ${COIN}</span></div>`;
+const plaque = (cls, name, role, body, slot = '') => `<article class="plaque ${cls}"><header><span class="av">${FACE[cls]}</span><span class="who"><b>${name}</b><small>${role}</small></span><span class="slot">${slot}</span></header><p>${body}</p><p class="cites">Leans on: ${CITES[cls]}</p></article>`;
 // Hero: the willow in its pot, standing on van Helmont's scale.
 const HERO = `<svg class="hero-art" viewBox="0 0 320 250" role="img" aria-label="A cartoon willow in a pot standing on a scale that reads 76.7 kg">
-  <path d="M28 62c.5 6 3.5 9 9.5 9.5-6 .5-9 3.5-9.5 9.5-.5-6-3.5-9-9.5-9.5 6-.5 9-3.5 9.5-9.5Z" fill="#F2622A"/>
+  <path d="M28 62c.5 6 3.5 9 9.5 9.5-6 .5-9 3.5-9.5 9.5-.5-6-3.5-9-9.5-9.5 6-.5 9-3.5 9.5-9.5Z" fill="#FFFFFF"/>
   <path d="M286 30c.4 4.6 2.7 7 7.3 7.3-4.6.4-7 2.7-7.3 7.3-.4-4.6-2.7-7-7.3-7.3 4.6-.4 7-2.7 7.3-7.3Z" fill="#FDB62F"/>
   <path d="M278 132c.3 3.4 2 5.1 5.4 5.4-3.4.3-5.1 2-5.4 5.4-.3-3.4-2-5.1-5.4-5.4 3.4-.3 5.1-2 5.4-5.4Z" fill="#F2622A"/>
   <path d="M14 184c8-12 14 12 22 0s14 12 22 0" fill="none" stroke="#2EE06E" stroke-width="5" stroke-linecap="round"/>
   <path d="M252 96c7-10 12 10 19 0s12 10 19 0" fill="none" stroke="#FDB62F" stroke-width="5" stroke-linecap="round"/>
-  <ellipse cx="160" cy="236" rx="112" ry="8" fill="#141414" opacity=".12"/>
+  <ellipse cx="160" cy="236" rx="112" ry="8" fill="#141414" opacity=".18"/>
   <rect x="64" y="186" width="192" height="44" rx="14" fill="#fff" stroke="#141414" stroke-width="3"/>
   <rect x="116" y="196" width="88" height="24" rx="7" fill="#141414"/>
   <text x="160" y="213" text-anchor="middle" font-family="Outfit, sans-serif" font-weight="800" font-size="15" fill="#2EE06E">76.7 kg</text>
-  <rect x="78" y="174" width="164" height="14" rx="7" fill="#FDB62F" stroke="#141414" stroke-width="3"/>
+  <rect x="78" y="174" width="164" height="14" rx="7" fill="#FFFFFF" stroke="#141414" stroke-width="3"/>
   <path d="M159 116c-3-18-1-34 5-50" fill="none" stroke="#141414" stroke-width="12" stroke-linecap="round"/>
   <path d="M159 116c-3-18-1-34 5-50" fill="none" stroke="#8a5530" stroke-width="6" stroke-linecap="round"/>
   <g stroke="#141414" stroke-width="3"><circle cx="128" cy="62" r="28" fill="#20b558"/><circle cx="196" cy="60" r="27" fill="#20b558"/><circle cx="162" cy="44" r="33" fill="#2EE06E"/><circle cx="160" cy="80" r="26" fill="#2EE06E"/></g>
   <g fill="none" stroke="#149c45" stroke-width="3.5" stroke-linecap="round"><path d="M112 80c-4 12-2 24 2 34"/><path d="M134 88c-2 12 0 22 3 28"/><path d="M190 86c3 12 1 22-2 30"/><path d="M212 76c5 12 3 24-1 34"/></g>
-  <path d="M112 126h96l-12 50h-72z" fill="#F2622A" stroke="#141414" stroke-width="3" stroke-linejoin="round"/>
-  <rect x="104" y="114" width="112" height="16" rx="8" fill="#D9481A" stroke="#141414" stroke-width="3"/>
+  <path d="M112 126h96l-12 50h-72z" fill="#FDB62F" stroke="#141414" stroke-width="3" stroke-linejoin="round"/>
+  <rect x="104" y="114" width="112" height="16" rx="8" fill="#E89A12" stroke="#141414" stroke-width="3"/>
   <g stroke="#141414" stroke-width="2.5"><circle cx="146" cy="148" r="8" fill="#fff"/><circle cx="174" cy="148" r="8" fill="#fff"/></g>
   <circle cx="148" cy="149" r="3.5" fill="#141414"/><circle cx="176" cy="149" r="3.5" fill="#141414"/>
   <path d="M152 162c5 5 11 5 16 0" fill="none" stroke="#141414" stroke-width="3" stroke-linecap="round"/>
@@ -145,12 +157,17 @@ const ALT = `<div class="card"><h3 style="margin-top:0">Let us try it another wa
 
 // ---------- views ----------
 const V = {
-  welcome: () => `<div class="hero">${HERO}<h1>The Willow Mystery</h1></div>
-    <p class="lead">In the 1640s, Jan van Helmont planted a <b>2.3 kg</b> willow in <b>90.7 kg</b> of dried soil. He gave it only rainwater. Five years later the tree weighed <mark>76.7 kg</mark>.</p>
-    <p class="lead">Where did <b>74 kg</b> of tree come from? Let us put the question on trial with three AI agents who will <b>not</b> always agree.</p>
-    <div class="card"><label for="name"><b>Your first name</b></label><input id="name" type="text" value="${esc(S.name)}" placeholder="e.g. Ishita" autocomplete="given-name">
-    <p class="muted">About 15 minutes. Your progress saves on this device, so you can stop and come back. Your teacher reviews the AI's feedback.</p>
-    <button class="go" data-act="start"><span class="knob">${ICON.arrow}</span>Start the investigation</button></div>`,
+  welcome: () => `<label class="namebar"><span class="sr">Your first name</span>${ICON.user}<input id="name" type="text" value="${esc(S.name)}" placeholder="Type your first name" autocomplete="given-name"></label>
+    <h1 class="title">Solve the<br>Willow Mystery</h1>
+    <div class="stage">
+      <div class="peek amber" aria-hidden="true"></div>
+      <div class="feature"><h2>Where did 74 kg of tree come from?</h2>${HERO}<button class="play" data-act="start">${ICON.play}Start</button></div>
+      <div class="peek green" aria-hidden="true"></div>
+    </div>
+    <div class="pager" aria-hidden="true"><i></i><i class="on"></i><i></i><i></i></div>
+    <div class="card story"><p>In the 1640s, Jan van Helmont planted a <b>2.3 kg</b> willow in <b>90.7 kg</b> of dried soil and gave it only rainwater. Five years later it weighed <mark>76.7 kg</mark>.</p>
+    <p>Put the question on trial with three AI agents who will <b>not</b> always agree.</p>
+    <div class="row">${['leaf', 'skep', 'judge'].map(k => `<span class="av sm">${FACE[k]}</span>`).join('')}<span class="muted">About 15 min · stop and resume any time · your teacher reviews the AI</span></div></div>`,
 
   predict: () => `${steps()}<h2>Step 1 · What do you think?</h2>
     <p>The willow gained <mark>74.4 kg</mark>. Where did most of that mass come from?</p>
@@ -177,9 +194,14 @@ const V = {
 
   roundtable: () => `${steps()}<h2>Step 3 · The round-table</h2>
     <p>The soil explains only <mark>0.08%</mark>. So where did the rest come from? Explain in 2–3 sentences. Three agents will respond, and <b>each one reads what the others said</b>.</p>
-    <div class="row muted" style="gap:14px"><span><b style="color:var(--leaf)">Dr. Leaf</b>: explains</span><span><b style="color:var(--skep)">Skeptic</b>: challenges</span><span><b style="color:var(--judge)">Evidence Judge</b>: checks evidence, gives feedback</span></div>
+    <div class="podium" aria-label="Speaking order: Dr. Leaf explains, Skeptic challenges, the Evidence Judge decides on your feedback">
+      <div class="col"><span class="av big">${FACE.leaf}</span><b>Dr. Leaf</b><small>explains</small><div class="blk b1">1st</div></div>
+      <div class="col"><span class="av big">${FACE.skep}</span><b>Skeptic</b><small>challenges</small><div class="blk b2">2nd</div></div>
+      <div class="col"><span class="av big">${FACE.judge}</span><b>Evidence Judge</b><small>gives feedback</small><div class="blk b3">3rd</div></div>
+    </div>
+    <div class="sheet"><label for="expl"><b>Your explanation</b></label>
     <textarea id="expl" placeholder="I think the mass came from…">${esc(S.rt?.learner ?? '')}</textarea>
-    <p><button data-act="ask" id="askb">${S.rt ? 'Ask again' : 'Send to the round-table'}</button></p>
+    <p><button data-act="ask" id="askb">${S.rt ? 'Ask again' : 'Send to the round-table'}</button></p></div>
     <div id="rt">${S.rt ? rtView() : ''}</div>
     ${S.rt ? '<button data-act="go" data-arg="disagree">The agents disagree. Settle it →</button>' : ''}`,
 
@@ -366,7 +388,7 @@ addEventListener('hashchange', render);
 
 function render() {
   const view = location.hash === '#teacher' ? 'teacher' : location.hash === '#about' ? 'about' : S.screen;
-  $('app').innerHTML = (V[view] || V.welcome)();
+  $('app').innerHTML = (view === 'teacher' || view === 'about' ? '' : topbar()) + (V[view] || V.welcome)();
   const here = view === 'teacher' ? '#teacher' : view === 'about' ? '#about' : '#';
   document.querySelectorAll('.dock a').forEach(a => a.classList.toggle('on', a.getAttribute('href') === here));
 }

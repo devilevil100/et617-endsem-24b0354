@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "cream-palette",
+        "value": "*",
+        "files": [
+          "index.html"
+        ],
+        "createdAt": "2026-11-18T13:16:57.007Z",
+        "reason": "user pinned the look with a reference image whose ground is warm cream (playful quiz style); not a reflex default"
+      }
+    ]
+  }
+}
