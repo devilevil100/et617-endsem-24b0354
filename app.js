@@ -12,6 +12,13 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': 
 const $ = id => document.getElementById(id);
 const picked = name => document.querySelector(`input[name="${name}"]:checked`)?.value;
 function go(screen) { S.screen = screen; log('screen', screen); render(); scrollTo(0, 0); }
+// Inline message next to the button that was pressed (no browser pop-ups).
+function say(msg) {
+  let m = $('msg'); if (!m) { m = document.createElement('p'); m.id = 'msg'; m.className = 'fb no'; m.setAttribute('role', 'alert'); }
+  m.textContent = msg; (document.activeElement?.closest('button') || $('app').lastElementChild).insertAdjacentElement('afterend', m);
+}
+// AI vs rule check: a direct contradiction (one says correct, the other a misconception) is flagged for the teacher.
+const clash = (ai, rule) => (ai === 'correct' && rule.startsWith('M')) || (rule === 'correct' && ai.startsWith('M'));
 
 const STEPS = ['predict', 'ledger', 'roundtable', 'disagree', 'tasks', 'summary'];
 const STEP_NAMES = ['Predict', 'Evidence', 'Round-table', 'Disagreement', 'Challenge', 'Summary'];
@@ -25,7 +32,7 @@ const ICON = {
 };
 // Progress: one segment per step; the current step is the long orange pill.
 const steps = () => { const at = STEPS.indexOf(S.screen);
-  return `<nav class="progress" aria-label="Progress: step ${at + 1} of 6, ${STEP_NAMES[at]}"><span class="dots">${STEPS.map((s, i) => `<i class="${i < at ? 'done' : i === at ? 'on' : ''}"></i>`).join('')}</span><span>Step ${at + 1} of 6 · ${STEP_NAMES[at]}</span></nav>`; };
+  return `<nav class="progress" aria-label="Progress: step ${at + 1} of 6, ${STEP_NAMES[at]}"><span class="dots">${STEPS.map((s, i) => `<i class="${i < at ? 'done' : i === at ? 'on' : ''}"></i>`).join('')}</span><span>Step ${at + 1} of 6 · ${STEP_NAMES[at]}</span>${at > 0 ? `<button class="back" data-act="go" data-arg="${STEPS[at - 1]}"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>Back</button>` : ''}</nav>`; };
 // Agent card: avatar, name, role, a fixed badge slot, the reply, and the evidence it leans on.
 const CITES = { leaf: '6CO₂ + 6H₂O → C₆H₁₂O₆ + 6O₂', skep: 'oven: 100 g fresh leaves → 12 g dry', judge: 'ledger: soil −0.057 kg vs tree +74.4 kg' };
 ICON.play = svg('<path d="M8 5v14l11-7z" fill="currentColor"/>');
@@ -65,8 +72,8 @@ const HERO = `<svg class="hero-art" viewBox="0 0 320 250" role="img" aria-label=
 </svg>`;
 
 // ---------- feedback items that the teacher reviews (C5) ----------
-function addFb(where, learner, text, source, verdict) {
-  const item = { id: Date.now() + '' + S.fb.length, where, learner, text, source, verdict, status: 'pending', teacherText: '' };
+function addFb(where, learner, text, source, verdict, extra = {}) {
+  const item = { id: Date.now() + '' + S.fb.length, where, learner, text, source, verdict, status: 'pending', teacherText: '', ...extra };
   S.fb.push(item); save(); return item;
 }
 function fbView(item) {
@@ -75,7 +82,8 @@ function fbView(item) {
   const badge = item.status === 'approved' ? '<span class="badge approved">Approved by your teacher</span>'
     : item.status === 'overridden' ? '<span class="badge overridden">Your teacher rewrote this feedback</span>'
     : '<span class="badge">Waiting for teacher review</span>';
-  const src = item.source === 'sample' ? ' <span class="badge sample">Recorded sample: live AI unavailable</span>' : '';
+  const src = (item.source === 'sample' ? ' <span class="badge sample">Recorded sample: live AI unavailable</span>' : '')
+    + (item.flag && item.status === 'pending' ? ' <span class="badge sample">Your teacher will double-check this one</span>' : '');
   return plaque('judge', 'Evidence Judge', 'checks claims against evidence', esc(shown), badge + src);
 }
 
@@ -169,7 +177,9 @@ const V = {
     <p>Put the question on trial with three AI agents who will <b>not</b> always agree.</p>
     <div class="row">${['leaf', 'skep', 'judge'].map(k => `<span class="av sm">${FACE[k]}</span>`).join('')}<span class="muted">About 15 min · stop and resume any time · your teacher reviews the AI</span></div></div>`,
 
-  predict: () => `${steps()}<h2>Step 1 · What do you think?</h2>
+  predict: () => S.predict ? `${steps()}<h2>Step 1 · Your prediction</h2>
+    <div class="fb ok">You locked in <b>${esc(S.predict.choice)}</b> (${esc(S.predict.conf)}). Predictions stay locked, so we can see how your thinking changes by the end.</div>
+    <button data-act="go" data-arg="ledger">Back to the evidence</button>` : `${steps()}<h2>Step 1 · What do you think?</h2>
     <p>The willow gained <mark>74.4 kg</mark>. Where did most of that mass come from?</p>
     <div class="opts">${['Soil', 'Water', 'Air (carbon dioxide)', 'Sunlight'].map(o => `<label><input type="radio" name="p" value="${o}"> ${o}</label>`).join('')}</div>
     <p><b>How sure are you?</b></p>
@@ -189,7 +199,8 @@ const V = {
     <tr><td><b>Soil</b> (dried)</td><td>90.700 kg</td><td>90.643 kg</td><td><input id="sl" type="number" step="any" inputmode="decimal" value="${L?.sl ?? ''}" aria-label="Soil change in kg"></td></tr></table>
     <p class="muted">Change = after − start. Type how much the tree gained and how much the soil lost.</p>
     <button data-act="ledger">Check my ledger</button><div id="lres">${L?.ok ? ledgerResult() : L ? '<div class="fb no">Not quite. Subtract carefully: 76.7 − 2.3 and 90.700 − 90.643. Watch the decimals.</div>' : ''}</div></div>
-    ${L?.ok ? '<button data-act="go" data-arg="roundtable">Next: explain it to the agents →</button>' : ''}`;
+    ${L?.ok ? '<button data-act="go" data-arg="roundtable">Next: explain it to the agents</button>'
+      : L?.tries >= 2 ? '<div class="fb ok"><b>Worked answer:</b> tree 76.7 − 2.3 = <b>74.4 kg gained</b>; soil 90.700 − 90.643 = <b>0.057 kg lost</b>. So the soil explains only 0.057 ÷ 74.4 ≈ <mark>0.08%</mark> of the gain.</div><button data-act="go" data-arg="roundtable">Next: explain it to the agents</button>' : ''}`;
   },
 
   roundtable: () => `${steps()}<h2>Step 3 · The round-table</h2>
@@ -219,7 +230,7 @@ const V = {
     <p><b>2. For the DRY tree, the biggest part of its mass is…</b></p>
     <div class="opts seg">${['Water', 'Matter built from CO₂'].map(o => `<label><input type="radio" name="dry" value="${o}" ${S.dis?.dry === o ? 'checked' : ''}> ${o}</label>`).join('')}</div>
     <button data-act="verdict">Give my verdict</button><div id="dres">${S.dis?.fb ?? ''}</div>
-    ${S.dis?.ok ? '<p><button data-act="go" data-arg="tasks">Next: the challenge set →</button></p>' : ''}`;
+    ${S.dis?.ok || S.dis?.tries >= 2 ? '<p><button data-act="go" data-arg="tasks">Next: the challenge set</button></p>' : ''}`;
   },
 
   tasks: () => {
@@ -234,7 +245,7 @@ const V = {
     return `${steps()}<h2>Step 5 · Challenge ${S.ti + 1} of ${S.order.length}</h2>
     ${S.alt && S.altAt === S.ti ? ALT : ''}
     <div class="card"><p>${T.q}</p>${input}
-    <div class="row"><button data-act="answer" ${done ? 'disabled' : ''}>Check</button><button class="ghost" data-act="hint">Hint</button></div>
+    <div class="row"><button data-act="answer" ${done ? 'disabled' : ''}>${T.kind === 'text' && A?.value !== undefined && !done ? 'Send my revised answer' : 'Check'}</button><button class="ghost" data-act="hint" ${done || A?.hinted ? 'disabled' : ''}>Hint</button></div>
     <div id="hint">${A?.hinted ? `<p class="muted"><b>Hint:</b> ${T.hint}</p>` : ''}</div>
     <div id="tres">${A?.value !== undefined ? taskFb(id) : ''}</div></div>
     ${done ? `<button data-act="next">${S.ti + 1 < S.order.length ? 'Next challenge →' : 'See my summary →'}</button>` : ''}`;
@@ -251,7 +262,8 @@ const V = {
     <div class="card"><b>Your journey</b><ul>
     <li>You predicted <b>${esc(S.predict?.choice)}</b> (${esc(S.predict?.conf)}).</li>
     <li>Ideas we tested along the way: ${mis.length ? [...new Set(mis)].map(m => m === 'M1' ? '"mass comes from soil"' : '"mass is mostly water"').join(', ') : 'none: you went straight to the evidence'}.</li>
-    <li>Hints used: ${S.hints}. Time: ${Math.round((Date.now() - S.started) / 60000)} min.</li></ul>
+    <li>Hints used: ${S.hints}. Time: ${Math.round((Date.now() - S.started) / 60000)} min.</li>
+    <li>Leaf points: <b>${points()}</b> (100 for each first-try answer, 50 after a retry, 100 each for the ledger and the verdict).</li></ul>
     <p>Big idea: <mark>a tree is built mostly out of thin air</mark>. Carbon and oxygen atoms from CO₂ make up about 90% of its dry mass. Water makes it heavy while it is alive, and the soil adds only a pinch of minerals.</p></div>
     <h3>Feedback from the agents (reviewed by your teacher)</h3>${S.fb.map(fbView).join('') || '<p class="muted">None yet.</p>'}
     <p><button class="ghost" data-act="reset">Start over</button></p>`;
@@ -263,9 +275,10 @@ const V = {
     Path chosen by the system: <b>${esc({ M1: 'Soil misconception', M2: 'Water misconception', core: 'Core', adv: 'Olympiad (advanced)' }[S.path] ?? '-')}</b><br>
     Ledger: ${S.ledger ? (S.ledger.ok ? 'correct' : 'in progress') + ` (${S.ledger.tries} tries)` : '-'} · Disagreement: ${S.dis ? (S.dis.ok ? 'resolved' : 'trying') + ` (oven max ${S.dis.maxH ?? 0} h)` : '-'} · Hints: ${S.hints}</div>
     <div class="card"><table><tr><th>Task</th><th>Answer</th><th>Tries</th><th>Result</th></tr>
-    ${Object.keys(TASKS).filter(id => S.ans[id]).map(id => { const a = S.ans[id]; return `<tr><td>${id.toUpperCase()}</td><td>${esc(Array.isArray(a.value) ? a.value.join(', ') : a.value)}</td><td>${a.tries}</td><td>${a.ok ? 'correct' : 'wrong'}${a.mis ? ' ' + a.mis : ''}</td></tr>`; }).join('') || '<tr><td colspan="4" class="muted">No answers yet.</td></tr>'}</table></div>
-    <h2>AI feedback queue</h2>${S.fb.map(f => `<div class="card"><div class="row"><b>${esc(f.where)}</b><span class="badge ${f.status}">${f.status}</span>${f.source === 'sample' ? '<span class="badge sample">recorded sample</span>' : '<span class="badge">live AI</span>'}<span class="badge">verdict: ${esc(f.verdict)}</span></div>
-      <p class="muted">Learner wrote: "${esc(f.learner)}"</p><p>AI said: ${esc(f.text)}</p>
+    ${Object.keys(TASKS).filter(id => S.ans[id]?.value !== undefined).map(id => { const a = S.ans[id]; return `<tr><td>${id.toUpperCase()}</td><td>${esc(Array.isArray(a.value) ? a.value.join(', ') : a.value)}</td><td>${a.tries}</td><td>${a.ok ? 'correct' : 'wrong'}${a.mis ? ' ' + a.mis : ''}</td></tr>`; }).join('') || '<tr><td colspan="4" class="muted">No answers yet.</td></tr>'}</table></div>
+    <h2>AI feedback queue</h2><p class="muted">Flagged items (the AI and the rule check disagree) come first.</p>${[...S.fb].sort((a, b) => (b.flag && b.status === 'pending') - (a.flag && a.status === 'pending')).map(f => `<div class="card"><div class="row"><b>${esc(f.where)}</b><span class="badge ${f.status}">${f.status}</span>${f.flag ? '<span class="badge sample">flagged: AI and rule check disagree</span>' : ''}${f.source === 'sample' ? '<span class="badge sample">recorded sample</span>' : '<span class="badge">live AI</span>'}<span class="badge">verdict: ${esc(f.verdict)}</span></div>
+      <p class="muted">Learner wrote: "${esc(f.learner)}"</p><p>AI Judge said: ${esc(f.text)}</p>
+      ${f.agents ? `<details><summary>What Dr. Leaf and Skeptic told the learner</summary><p><b>Dr. Leaf:</b> ${esc(f.agents.explainer)}</p><p><b>Skeptic:</b> ${esc(f.agents.challenger)}</p></details>` : ''}
       <textarea id="ov${f.id}" placeholder="Write your own feedback to replace the AI's…">${esc(f.teacherText)}</textarea>
       <div class="row" style="margin-top:8px"><button data-act="approve" data-arg="${f.id}">Approve AI feedback</button><button class="ghost" data-act="override" data-arg="${f.id}">Override with my text</button></div></div>`).join('') || '<p class="muted">No AI feedback yet.</p>'}`,
 
@@ -302,11 +315,11 @@ const model = id => ({ t1: 'Carbon dioxide from the air', t2: '0.057 ÷ 74.4 × 
 
 // ---------- actions ----------
 const ACT = {
-  start() { S.name = $('name').value.trim(); log('start', S.name); go('predict'); },
-  go(screen) { go(screen); },
+  start() { S.name = $('name').value.trim(); if (!S.predict) S.started = Date.now(); log('start', S.name); go(S.predict ? S.screen : 'predict'); },
+  go(screen) { if (screen === 'tasks' && S.ti >= S.order.length) S.ti = Math.max(0, S.order.length - 1); go(screen); },
   predict() {
     const choice = picked('p'), conf = picked('c'), why = $('why').value.trim();
-    if (!choice || !conf) return alert('Pick an answer and how sure you are.');
+    if (!choice || !conf) return say('Pick an answer and how sure you are.');
     S.predict = { choice, conf, why };
     S.path = choice === 'Soil' ? 'M1' : choice === 'Water' ? 'M2' : choice.startsWith('Air') && conf === 'Certain' ? 'adv' : 'core';
     S.order = ORDERS[S.path];
@@ -320,24 +333,26 @@ const ACT = {
     S.ledger = { tg: $('tg').value, sl: $('sl').value, ok, tries, first: ok && tries === 1 }; log('ledger', S.ledger); render();
   },
   async ask() {
-    const text = $('expl').value.trim(); if (text.length < 10) return alert('Write a sentence or two first.');
+    const text = $('expl').value.trim(); if (text.length < 10) return say('Write a sentence or two first.');
     $('askb').disabled = true; $('rt').innerHTML = '<p class="muted">Dr. Leaf is thinking… then Skeptic reads Dr. Leaf… then the Judge reads you both… (up to 20 s)</p>';
     let r;
     try { const d = await callAgents({ mode: 'roundtable', text, path: S.path, prev: S.rt?.judge }); r = { explainer: d.explainer, challenger: d.challenger, judge: d.judge, source: 'ai' }; }
     catch (e) { log('ai_fail', String(e)); r = { ...SAMPLE_RT, judge: ruleJudge(text), source: 'sample' }; }
-    const item = addFb('Round-table', text, r.judge.feedback, r.source, r.judge.verdict);
+    const item = addFb('Round-table', text, r.judge.feedback, r.source, r.judge.verdict,
+      { flag: r.source === 'ai' && clash(r.judge.verdict, ruleJudge(text).verdict), agents: { explainer: r.explainer, challenger: r.challenger } });
     if (r.judge.verdict === 'M1_soil') log('misconception', 'M1'); if (r.judge.verdict === 'M2_water') log('misconception', 'M2');
     S.rt = { ...r, learner: text, fbId: item.id }; log('roundtable', { verdict: r.judge.verdict, source: r.source }); render();
   },
   verdict() {
-    const fresh = picked('fresh'), dry = picked('dry'); if (!fresh || !dry) return alert('Answer both questions.');
+    const fresh = picked('fresh'), dry = picked('dry'); if (!fresh || !dry) return say('Answer both questions.');
     const ok = fresh === 'Water' && dry === 'Matter built from CO₂';
     const tries = (S.dis?.tries ?? 0) + 1;
     const fb = ok ? `<div class="fb ok"><b>You settled it, and both agents were partly right.</b> Skeptic is right about the <b>fresh</b> tree: about 88% of a living leaf is water. Dr. Leaf is right about the <b>dry</b> tree: the 12 g that never evaporates is mostly carbon and oxygen atoms built from CO₂. Van Helmont weighed a living tree, so his 74 kg was mostly water, but the part that stays is built from air.</div>`
       : dry === 'Water' ? `<div class="fb no">Run the oven to 48 hours and watch: the water is driven off, but 12 g stays. Can what is left after drying be water?</div>`
       : `<div class="fb no">Look at the oven at 0 hours versus 48 hours. How much of the fresh leaf disappeared as water vapour?</div>`;
+    const resolved = !ok && tries >= 2 ? `<div class="fb ok"><b>Here is how it resolves.</b> A living leaf is about 88% water, so Skeptic is right about <b>fresh</b> mass. The 12 g left after drying is mostly carbon and oxygen built from CO₂, so Dr. Leaf is right about <b>dry</b> mass. Both were partly right.</div>` : '';
     if (!ok) log('misconception', 'M2');
-    S.dis = { ...S.dis, ok, tries, first: ok && tries === 1, fb, fresh, dry }; log('verdict', { fresh, dry, ok }); render();
+    S.dis = { ...S.dis, ok, tries, first: ok && tries === 1, fb: fb + resolved, fresh, dry }; log('verdict', { fresh, dry, ok }); render();
   },
   hint() { const id = S.order[S.ti]; S.ans[id] = { ...(S.ans[id] || { tries: 0 }), hinted: true }; S.hints++; log('hint', id); render(); },
   async answer() {
@@ -347,15 +362,15 @@ const ACT = {
     if (T.kind === 'num') value = $('a').value === '' ? undefined : parseFloat($('a').value);
     if (T.kind === 'match') { value = T.items.map((_, i) => $('m' + i).value); if (value.includes('')) value = undefined; }
     if (T.kind === 'text') value = $('a').value.trim() || undefined;
-    if (value === undefined || Number.isNaN(value)) return alert('Answer first.');
+    if (value === undefined || Number.isNaN(value)) return say('Answer first.');
     let res;
     if (T.kind === 'text') {
       $('tres').innerHTML = '<p class="muted">The Evidence Judge is reading your answer…</p>';
       let j, source = 'ai';
       try { j = (await callAgents({ mode: 'judge', text: value, prev: S.rt?.judge })).judge; } catch (e) { log('ai_fail', String(e)); j = ruleJudge(value); source = 'sample'; }
-      const item = addFb('Challenge: convince your cousin', value, j.feedback, source, j.verdict);
+      const item = addFb('Challenge: convince your cousin', value, j.feedback, source, j.verdict, { flag: source === 'ai' && clash(j.verdict, ruleJudge(value).verdict) });
+      // Two attempts: she can revise once after reading the Judge's feedback.
       res = { ok: j.verdict === 'correct', mis: j.verdict === 'M1_soil' ? 'M1' : j.verdict === 'M2_water' ? 'M2' : null, fbId: item.id };
-      res.tries = 2; // one AI-judged attempt; the teacher reviews it
     } else res = T.check(value);
     const tries = res.tries ?? prev.tries + 1;
     S.ans[id] = { ...prev, ...res, value, tries, firstOk: res.ok && prev.tries === 0 };
@@ -372,7 +387,7 @@ const ACT = {
     save(); S.ti < S.order.length ? render() : go('summary');
   },
   approve(id) { const f = S.fb.find(x => x.id === id); f.status = 'approved'; log('teacher_approve', id); render(); },
-  override(id) { const t = $('ov' + id).value.trim(); if (!t) return alert('Write your feedback first.'); const f = S.fb.find(x => x.id === id); f.status = 'overridden'; f.teacherText = t; log('teacher_override', id); render(); },
+  override(id) { const t = $('ov' + id).value.trim(); if (!t) return say('Write your feedback first.'); const f = S.fb.find(x => x.id === id); f.status = 'overridden'; f.teacherText = t; log('teacher_override', id); render(); },
   reset() { if (confirm('Erase all progress on this device?')) { S = blank(); save(); location.hash = ''; render(); } }
 };
 
