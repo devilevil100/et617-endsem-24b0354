@@ -201,15 +201,21 @@ const ALT = `<div class="card"><h3 style="margin-top:0">Let us try it another wa
 const V = {
   welcome: () => `<label class="namebar"><span class="sr">Your first name</span>${ICON.user}<input id="name" type="text" value="${esc(S.name)}" placeholder="Type your first name" autocomplete="given-name"></label>
     <h1 class="title">Solve the<br>Willow Mystery</h1>
-    <div class="stage">
-      <div class="peek amber" aria-hidden="true"></div>
-      <div class="feature"><h2>Where did 74 kg of tree come from?</h2>${HERO}<button class="play" data-act="start">${ICON.play}Start</button></div>
-      <div class="peek green" aria-hidden="true"></div>
+    <div class="carousel" id="car" tabindex="0" aria-roledescription="carousel" aria-label="About the mystery: swipe or use arrow keys">
+      <section class="slide feature" aria-label="1 of 3"><h2>Where did 74 kg of tree come from?</h2>${HERO}<button class="play" data-act="start">${ICON.play}Start</button></section>
+      <section class="slide s-agents" aria-label="2 of 3"><h2>Meet the round-table</h2>
+        <ul class="who-list">
+          <li><span class="av">${FACE.leaf}</span><span><b>Dr. Leaf</b><small>explains, by counting atoms</small></span></li>
+          <li><span class="av">${FACE.skep}</span><span><b>Skeptic</b><small>argues the other side</small></span></li>
+          <li><span class="av">${FACE.judge}</span><span><b>Evidence Judge</b><small>checks every claim, gives you feedback</small></span></li>
+        </ul><p class="note">They will not always agree. <b>You</b> settle it, with evidence.</p></section>
+      <section class="slide s-how" aria-label="3 of 3"><h2>How it works</h2>
+        <ol class="how"><li>Predict</li><li>Weigh the evidence</li><li>Explain to the agents</li><li>Settle their disagreement</li><li>Take the challenge</li><li>See what changed</li></ol>
+        <p class="note">About 15 min · stop and resume any time · your teacher reviews the AI</p></section>
     </div>
-    <div class="pager" aria-hidden="true"><i></i><i class="on"></i><i></i><i></i></div>
+    <div class="pager">${[0, 1, 2].map(i => `<button class="dot ${i ? '' : 'on'}" data-act="slide" data-arg="${i}" aria-label="Show slide ${i + 1} of 3"></button>`).join('')}</div>
     <div class="card story"><p>In the 1640s, Jan van Helmont planted a <b>2.3 kg</b> willow in <b>90.7 kg</b> of dried soil and gave it only rainwater. Five years later it weighed <mark>76.7 kg</mark>.</p>
-    <p>Put the question on trial with three AI agents who will <b>not</b> always agree.</p>
-    <div class="row">${['leaf', 'skep', 'judge'].map(k => `<span class="av sm">${FACE[k]}</span>`).join('')}<span class="muted">About 15 min · stop and resume any time · your teacher reviews the AI</span></div></div>`,
+    <p>Put the question on trial with three AI agents who will <b>not</b> always agree.</p></div>`,
 
   predict: () => S.predict ? `${steps()}<h2>Step 1 · Your prediction</h2>
     <div class="fb ok">You locked in <b>${esc(S.predict.choice)}</b> (${esc(S.predict.conf)}). Predictions stay locked, so we can see how your thinking changes by the end.</div>
@@ -446,6 +452,7 @@ const ACT = {
     if (S.ti === S.order.length && S.path === 'core' && !S.order.includes('t6') && S.order.every(id => S.ans[id]?.firstOk || TASKS[id].kind === 'text')) { S.order = [...S.order, 't6']; log('unlock', 't6'); }
     save(); S.ti < S.order.length ? render() : go('summary');
   },
+  slide(i) { $('car').children[+i].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); },
   post() { const choice = picked('post'), conf = picked('pc'); if (!choice || !conf) return say('Pick an answer and how sure you are.'); S.post = { choice, conf }; log('post', S.post); render(); },
   tlogin() { const c = $('tcode').value.trim(); if (!c) return say('Enter the teacher code.'); T.code = c; T.bad = false; try { sessionStorage.setItem('tcode', c); } catch {} T.learners = null; render(); loadLearners(); },
   approve(id) { review(id, 'approved', ''); },
@@ -470,6 +477,12 @@ function render() {
   $('app').innerHTML = (view === 'teacher' || view === 'about' ? '' : topbar()) + (V[view] || V.welcome)();
   const here = view === 'teacher' ? '#teacher' : view === 'about' ? '#about' : '#';
   document.querySelectorAll('.dock a').forEach(a => a.classList.toggle('on', a.getAttribute('href') === here));
+  // Welcome carousel: native scroll-snap; the dots follow the swipe and jump on tap.
+  const car = $('car');
+  if (car) car.addEventListener('scroll', () => {
+    const i = Math.round(car.scrollLeft / Math.max(1, car.scrollWidth - car.clientWidth) * (car.children.length - 1));
+    document.querySelectorAll('.pager .dot').forEach((d, k) => d.classList.toggle('on', k === i));
+  }, { passive: true });
 }
 render();
 if (location.hash === '#teacher') loadLearners(); else pullReviews();

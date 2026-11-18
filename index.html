@@ -148,19 +148,32 @@
   .namebar input { border: 0; box-shadow: none !important; padding: 12px 8px; background: transparent; }
   .title { font-size: clamp(2.6rem, 11vw, 3.6rem); margin: 22px 0 18px; }
 
-  /* Feature card with peeking neighbours, like a game carousel. The Start pill overlaps its bottom edge. */
-  .stage { display: grid; grid-template-columns: 18px 1fr 18px; gap: 10px; margin: 0 -16px; align-items: stretch; }
-  .peek { border-radius: 0 26px 26px 0; }
-  .peek.amber { background: var(--amber); }
-  .peek.green { background: var(--green); border-radius: 26px 0 0 26px; }
-  .feature { position: relative; background: var(--orange); border-radius: 34px; padding: 22px 18px 44px; text-align: center; box-shadow: 0 22px 40px -24px rgba(242,98,42,.9); }
+  /* Welcome carousel: native scroll-snap. Neighbouring slides peek in, so the swipe is honest. */
+  .carousel { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 4px 24px 40px; margin: 0 -16px; scrollbar-width: none; }
+  .carousel::-webkit-scrollbar { display: none; }
+  .carousel:focus-visible { outline: 3px solid var(--amber); outline-offset: -3px; }
+  .slide { position: relative; flex: 0 0 86%; scroll-snap-align: center; border-radius: 34px; padding: 22px 18px 44px; }
+  @media (min-width: 700px) { .slide { flex-basis: 80%; } }
+  .feature { background: var(--orange); text-align: center; box-shadow: 0 22px 40px -24px rgba(242,98,42,.9); }
   .feature h2 { color: #fff; margin: 0 0 6px; font-size: clamp(1.5rem, 6vw, 1.9rem); }
   .feature .hero-art { max-width: 300px; margin: 0 auto; }
+  .s-agents { background: var(--amber); } .s-how { background: var(--green); }
+  .s-agents h2, .s-how h2 { margin: 0 0 14px; font-size: clamp(1.5rem, 6vw, 1.9rem); }
+  .who-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  .who-list li { display: flex; align-items: center; gap: 12px; background: var(--paper); border-radius: 20px; padding: 10px 14px; max-width: none; }
+  .who-list b { display: block; font: 800 1.05rem/1.2 var(--display); }
+  .who-list small { font-weight: 700; color: var(--quiet); }
+  .how { margin: 0; padding: 0; list-style: none; counter-reset: s; display: grid; gap: 8px; }
+  .how li { counter-increment: s; display: flex; align-items: center; gap: 12px; background: var(--paper); border-radius: 18px; padding: 9px 14px; font: 700 1rem/1.2 var(--display); max-width: none; }
+  .how li::before { content: counter(s); display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--ink); color: #fff; font-weight: 800; flex: none; }
+  .note { margin: 14px 2px 0; font-weight: 700; }
   .play { position: absolute; left: 50%; bottom: -28px; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 10px; padding: 16px 34px; font-size: 1.15rem; background: var(--orange-d); border: 4px solid var(--cream); box-shadow: 0 12px 22px -10px rgba(212,72,22,.9); }
   .play:active { transform: translateX(-50%) scale(.98); }
-  .pager { display: flex; justify-content: center; gap: 6px; margin: 44px 0 10px; }
-  .pager i { width: 14px; height: 6px; border-radius: 99px; background: var(--ink); }
-  .pager i.on { width: 40px; background: var(--orange); }
+  .pager { display: flex; justify-content: center; gap: 2px; margin: 0 0 10px; }
+  .pager .dot { display: grid; place-items: center; width: auto; min-width: 26px; height: 26px; min-height: 0; padding: 0 4px; background: none; box-shadow: none; border-radius: 99px; }
+  .pager .dot::after { content: ""; width: 14px; height: 6px; border-radius: 99px; background: var(--ink); transition: width .3s cubic-bezier(.16,1,.3,1), background .3s; }
+  .pager .dot.on::after { width: 40px; background: var(--orange); }
+  .pager .dot:hover { background: none; }
   .story p { margin: 0 0 10px; }
   .av { display: inline-grid; place-items: center; width: 50px; height: 50px; border-radius: 50%; border: 2.5px solid var(--ink); overflow: hidden; flex: none; background: var(--paper); }
   .av svg { width: 100%; height: 100%; display: block; }
