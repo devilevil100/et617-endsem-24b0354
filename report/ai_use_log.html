@@ -1,0 +1,27 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>ET 617 AI-use log · 24B0354</title><style>
+  body { font: 11pt/1.45 system-ui, "Segoe UI", sans-serif; color:#1d2321; max-width: 780px; margin: 0 auto; padding: 24px; }
+  h1 { font-size: 20pt; margin-bottom: 4px; } h2 { font-size: 14pt; border-bottom: 2px solid #1d2321; padding-bottom: 3px; margin-top: 26px; page-break-after: avoid; }
+  h3 { font-size: 12pt; margin-bottom: 4px; page-break-after: avoid; }
+  table { border-collapse: collapse; width: 100%; margin: 8px 0; font-size: 10pt; page-break-inside: avoid; }
+  th, td { border: 1px solid #c8cfcb; padding: 5px 7px; text-align: left; vertical-align: top; }
+  th { background: #eef1ee; }
+  code, pre { font: 9pt/1.4 ui-monospace, monospace; } pre { background: #f4f5f2; padding: 8px; white-space: pre-wrap; border-radius: 6px; page-break-inside: avoid; }
+  .shots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; page-break-inside: avoid; }
+  .shots figure { margin: 0; } .shots img { width: 100%; border: 1px solid #c8cfcb; } figcaption { font-size: 8.5pt; color: #5b6662; }
+  .muted { color:#5b6662; }
+</style></head><body>
+<h1>AI-use log and reflection</h1>
+<p class="muted">ET 617 End-Semester Examination · 18 November 2026 · Roll number <b>24B0354</b> · The Willow Mystery (P3 · P3-T9 · L6 · C5)</p>
+<h2>AI tools, in the order I used them</h2>
+<ol>
+<li><b>Claude Code (Claude Opus 5.5)</b>, one continuous session from 6:00 PM: choosing the card, DESIGN.md, the app code, the agent prompts, testing on the live site, deployment and the report draft. The full chat export is attached separately on Moodle (secrets redacted).</li>
+<li><b>Impeccable design skill (Claude Code plugin)</b>, from about 6:35 PM: a design brief (PRODUCT.md), options for the visual direction and design-quality checks. I rejected its looks and gave a reference image of the playful quiz style I wanted; Claude implemented it in CSS and SVG.</li>
+<li><b>OpenRouter, model openai/gpt-4o-mini</b>, inside the app: the three agents (Dr. Leaf, Skeptic, Evidence Judge) and the T5 judge. The prompts are quoted in D6 of the report.</li>
+<li><b>AI writing-audit agent (a Claude Code subagent)</b>, after 8 PM: edited the wording of the report for a plainer style. It did not change facts, prompts or screenshots.</li>
+<li>This reflection was drafted with Claude from the decisions I made during the session, and reviewed by me.</li>
+</ol>
+<h2>Reflection</h2>
+<p>I used Claude Code for almost all of the building: talking through the exam card, writing the code and the agent prompts, drafting the content and this report, running tests and deploying. My part was deciding and judging. I asked for a card that would be interesting rather than safe and chose P3-T9-L6-C5. I did not like the first design, and after trying a second one I gave a reference image of the playful quiz style I wanted.</p>
+<p>Many of the real fixes came from using the app myself. The carousel looked swipeable but did nothing, the podium labels were misaligned, the agents called me "Ishita" after I typed my own name, the round-table ignored my "water" prediction, the evidence lab tested soil when I had predicted water, and the teacher queue was tiring to review. I also asked what would happen if a learner said water, which showed that Skeptic was agreeing with that misconception.</p>
+<p>The AI made real mistakes too. It created the GitHub repository under the wrong account, its fact check was so strict that the app kept falling back to recorded samples, and when the model picked its own side, Skeptic stated something false. The server now sets Skeptic&#39;s position. These problems only showed up when someone used the app as a learner, and that is the main thing I learned: AI builds quickly, but the teaching logic and the experience still need a person checking them. I would not let the AI have the final word on a learner&#39;s feedback; that stays with the teacher. I also learned to keep API keys and passwords out of AI chats.</p>
+</body></html>
