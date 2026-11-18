@@ -402,8 +402,8 @@ const ACT = {
     const text = $('expl').value.trim(); if (text.length < 10) return say('Write a sentence or two first.');
     $('askb').disabled = true; $('rt').innerHTML = '<p class="muted">Dr. Leaf is thinking… then Skeptic reads Dr. Leaf… then the Judge reads you both… (up to 20 s)</p>';
     let r;
-    try { const d = await callAgents({ mode: 'roundtable', text, path: S.path, prev: S.rt?.judge }); r = { explainer: d.explainer, challenger: d.challenger, judge: d.judge || ruleJudge(text), source: d.judge ? 'ai' : 'rules' }; if (!d.judge) log('judge_check_failed', d.judgeNote); }
-    catch (e) { log('ai_fail', String(e)); r = { ...SAMPLE_RT, judge: ruleJudge(text), source: 'sample' }; }
+    try { const d = await callAgents({ mode: 'roundtable', text, path: S.path, prev: S.rt?.judge, name: S.name }); r = { explainer: d.explainer, challenger: d.challenger, judge: d.judge || ruleJudge(text), source: d.judge ? 'ai' : 'rules' }; if (!d.judge) log('judge_check_failed', d.judgeNote); }
+    catch (e) { log('ai_fail', String(e)); r = { ...SAMPLE_RT, challenger: SAMPLE_RT.challenger.replace('Ishita', S.name || 'scientist'), judge: ruleJudge(text), source: 'sample' }; }
     const item = addFb('Round-table', text, r.judge.feedback, r.source, r.judge.verdict,
       { flag: r.source === 'ai' && clash(r.judge.verdict, ruleJudge(text).verdict), agents: { explainer: r.explainer, challenger: r.challenger } });
     if (r.judge.verdict === 'M1_soil') log('misconception', 'M1'); if (r.judge.verdict === 'M2_water') log('misconception', 'M2');
@@ -433,7 +433,7 @@ const ACT = {
     if (T.kind === 'text') {
       $('tres').innerHTML = '<p class="muted">The Evidence Judge is reading your answer…</p>';
       let j, source = 'ai';
-      try { j = (await callAgents({ mode: 'judge', text: value, prev: S.rt?.judge })).judge; } catch (e) { log('ai_fail', String(e)); j = ruleJudge(value); source = 'sample'; }
+      try { j = (await callAgents({ mode: 'judge', text: value, prev: S.rt?.judge, name: S.name })).judge; } catch (e) { log('ai_fail', String(e)); j = ruleJudge(value); source = 'sample'; }
       const item = addFb('Challenge: convince your cousin', value, j.feedback, source, j.verdict, { flag: source === 'ai' && clash(j.verdict, ruleJudge(value).verdict) });
       // Two attempts: she can revise once after reading the Judge's feedback.
       res = { ok: j.verdict === 'correct', mis: j.verdict === 'M1_soil' ? 'M1' : j.verdict === 'M2_water' ? 'M2' : null, fbId: item.id };

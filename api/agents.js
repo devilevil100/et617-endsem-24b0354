@@ -2,7 +2,7 @@
 // Each agent receives the earlier agents' replies, so they exchange information.
 const MODEL = process.env.OPENROUTER_MODEL || 'openai/gpt-4o-mini';
 
-const LEARNER = 'The learner is Ishita, 15, a Class 10 Olympiad aspirant in India who is bored by routine practice. Speak directly to her in a friendly, conversational tone ("let us", "we"). Short sentences. At most 60 words. Plain text, no markdown.';
+const LEARNER = 'The learner, {NAME}, is a Class 10 Olympiad aspirant in India who is bored by routine practice. Speak directly to {NAME} by first name in a friendly, conversational tone ("let us", "we"). Short sentences. At most 60 words. Plain text, no markdown.';
 const EVIDENCE = 'EVIDENCE BOARD (only use these facts): van Helmont (1648): willow 2.3 kg -> 76.7 kg in 5 years (gain 74.4 kg); dried soil 90.700 kg -> 90.643 kg (lost 0.057 kg = 0.08% of the gain); only rainwater was added. Oven drying: 100 g fresh leaves -> about 12 g dry (about 88% water). Dry plant matter is about 45% carbon, 45% oxygen, 6% hydrogen, under 5% soil minerals. ALWAYS say which mass you mean: FRESH mass is mostly water; DRY mass is mostly carbon and oxygen built from CO2. Never say the mass comes from "air and water" without that distinction. Photosynthesis: 6CO2 + 6H2O -> C6H12O6 + 6O2. Ruben & Kamen (1941, oxygen-18): the O2 released comes from water, so the carbon and oxygen in sugar come from CO2.';
 
 const PROMPTS = {
@@ -45,21 +45,24 @@ module.exports = async (req, res) => {
   if (!process.env.OPENROUTER_API_KEY) return res.status(503).json({ ok: false, error: 'AI key not configured' });
   const { mode, text = '', prev } = req.body || {};
   const learner = String(text).slice(0, 800).replace(/"/g, "'");
+  // The learner's real first name goes into every prompt (letters, spaces, . ' - only).
+  const name = String(req.body?.name || '').replace(/[^\p{L}\p{M} .'-]/gu, '').trim().slice(0, 30) || 'the learner';
+  const P = Object.fromEntries(Object.entries(PROMPTS).map(([k, v]) => [k, v.replaceAll('{NAME}', name)]));
   // Agent memory across turns: the Judge's earlier verdict is passed to the agents in the next turn.
   const memo = prev && ['correct', 'partial', 'M1_soil', 'M2_water'].includes(prev.verdict)
     ? `\nThe Evidence Judge's EARLIER verdict on this learner: ${prev.verdict} ("${String(prev.feedback || '').slice(0, 300).replace(/"/g, "'")}"). Build on it: target that gap, and say if she has moved past it.` : '';
   try {
     if (mode === 'roundtable') {
-      const explainer = await ask(PROMPTS.explainer, `Learner's explanation: "${learner}"${memo}`);
+      const explainer = await ask(P.explainer, `Learner's explanation: "${learner}"${memo}`);
       if (soilClaim(explainer)) throw new Error('explainer failed fact check');
-      const challenger = await ask(PROMPTS.challenger, `Learner's explanation: "${learner}"\nDr. Leaf said: "${explainer}"${memo}`);
+      const challenger = await ask(P.challenger, `Learner's explanation: "${learner}"\nDr. Leaf said: "${explainer}"${memo}`);
       // If only the Judge fails its checks, keep the live agents and let the app use its labelled rule-based judge.
       let judge = null, judgeNote = '';
-      try { judge = checkJudge(await ask(PROMPTS.judge, `Learner's explanation: "${learner}"\nDr. Leaf said: "${explainer}"\nSkeptic said: "${challenger}"${memo}`, true)); }
+      try { judge = checkJudge(await ask(P.judge, `Learner's explanation: "${learner}"\nDr. Leaf said: "${explainer}"\nSkeptic said: "${challenger}"${memo}`, true)); }
       catch (e) { judgeNote = String(e.message || e); }
       return res.json({ ok: true, model: MODEL, explainer, challenger, judge, judgeNote });
     }
-    if (mode === 'judge') return res.json({ ok: true, model: MODEL, judge: checkJudge(await ask(PROMPTS.task, `Learner's answer: "${learner}"${memo}`, true)) });
+    if (mode === 'judge') return res.json({ ok: true, model: MODEL, judge: checkJudge(await ask(P.task, `Learner's answer: "${learner}"${memo}`, true)) });
     return res.status(400).json({ ok: false, error: 'unknown mode' });
   } catch (e) {
     return res.status(502).json({ ok: false, error: String(e.message || e) });
