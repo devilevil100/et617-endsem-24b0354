@@ -38,17 +38,20 @@ function checkJudge(raw) {
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ ok: false });
   if (!process.env.OPENROUTER_API_KEY) return res.status(503).json({ ok: false, error: 'AI key not configured' });
-  const { mode, text = '' } = req.body || {};
+  const { mode, text = '', prev } = req.body || {};
   const learner = String(text).slice(0, 800).replace(/"/g, "'");
+  // Agent memory across turns: the Judge's earlier verdict is passed to the agents in the next turn.
+  const memo = prev && ['correct', 'partial', 'M1_soil', 'M2_water'].includes(prev.verdict)
+    ? `\nThe Evidence Judge's EARLIER verdict on this learner: ${prev.verdict} ("${String(prev.feedback || '').slice(0, 300).replace(/"/g, "'")}"). Build on it: target that gap, and say if she has moved past it.` : '';
   try {
     if (mode === 'roundtable') {
-      const explainer = await ask(PROMPTS.explainer, `Learner's explanation: "${learner}"`);
+      const explainer = await ask(PROMPTS.explainer, `Learner's explanation: "${learner}"${memo}`);
       if (soilClaim(explainer)) throw new Error('explainer failed fact check');
-      const challenger = await ask(PROMPTS.challenger, `Learner's explanation: "${learner}"\nDr. Leaf said: "${explainer}"`);
-      const judge = checkJudge(await ask(PROMPTS.judge, `Learner's explanation: "${learner}"\nDr. Leaf said: "${explainer}"\nSkeptic said: "${challenger}"`, true));
+      const challenger = await ask(PROMPTS.challenger, `Learner's explanation: "${learner}"\nDr. Leaf said: "${explainer}"${memo}`);
+      const judge = checkJudge(await ask(PROMPTS.judge, `Learner's explanation: "${learner}"\nDr. Leaf said: "${explainer}"\nSkeptic said: "${challenger}"${memo}`, true));
       return res.json({ ok: true, model: MODEL, explainer, challenger, judge });
     }
-    if (mode === 'judge') return res.json({ ok: true, model: MODEL, judge: checkJudge(await ask(PROMPTS.task, `Learner's answer: "${learner}"`, true)) });
+    if (mode === 'judge') return res.json({ ok: true, model: MODEL, judge: checkJudge(await ask(PROMPTS.task, `Learner's answer: "${learner}"${memo}`, true)) });
     return res.status(400).json({ ok: false, error: 'unknown mode' });
   } catch (e) {
     return res.status(502).json({ ok: false, error: String(e.message || e) });
